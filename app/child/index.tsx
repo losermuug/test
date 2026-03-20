@@ -6,6 +6,7 @@ import { useApp, achievementsData, getAgeGroup } from '@/contexts/AppContext';
 import { AGE_GROUP_CONFIG } from '@/constants/ageGroupData';
 import AchievementBadge from '@/components/app/AchievementBadge';
 import JuniorBackground from '@/components/app/JuniorBackground';
+import MoneyVisualizer from '@/components/app/MoneyVisualizer';
 import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 import {
   Wallet, Flame, Star, CheckSquare, BookOpen, LogOut,
@@ -260,17 +261,15 @@ export default function ChildDashboard() {
                 </TouchableOpacity>
               </View>
             </Animated.View>
-
-            {/* Balance card with PiggyBank sticker */}
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{
               marginTop: 20, backgroundColor: '#fff', borderRadius: 32, padding: 24, alignItems: 'center',
               shadowColor: '#C084FC', shadowOpacity: 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
             }}>
-              <Sticker icon={PiggyBank} color="#C084FC" bg="#C084FC15" size={34} tileSize={66} radius={22} />
-              <Text style={{ fontSize: 11, color: '#C084FC', fontWeight: '800', marginTop: 12, letterSpacing: 1.2, textTransform: 'uppercase' }}>Миний хэтэвч</Text>
-              <Text style={{ fontSize: 46, fontWeight: '900', color: '#1a1a2e', letterSpacing: -2, marginTop: 4 }}>
-                ₮{child.balance.toLocaleString()}
-              </Text>
+              <View style={{ width: 66, height: 66, borderRadius: 22, backgroundColor: '#C084FC15', justifyContent: 'center', alignItems: 'center' }}>
+                <PiggyBank size={34} color="#C084FC" />
+              </View>
+              <Text style={{ fontSize: 13, color: '#C084FC', fontWeight: '800', marginTop: 16, marginBottom: 12, letterSpacing: 1.2, textTransform: 'uppercase' }}>Таны зоос</Text>
+              <MoneyVisualizer amount={child.balance} size={54} textColor="#1a1a2e" />
               {/* Star sticker row for credit */}
               <View style={{ flexDirection: 'row', gap: 6, marginTop: 12 }}>
                 {[1, 2, 3, 4, 5].map(i => (
@@ -318,7 +317,7 @@ export default function ChildDashboard() {
             <View style={{ gap: 10 }}>
               {[
                 { icon: CheckSquare, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Даалгавар', sub: `${pendingTasks} хүлээж байна`, route: '/child/tasks' },
-                { icon: GraduationCap, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Хичээл', sub: `${child.lessonsCompleted.length}/6 хийсэн`, route: '/child/learn' },
+                { icon: GraduationCap, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Хичээл', sub: `${child?.lessonsCompleted?.length || 0}/6 хийсэн`, route: '/child/learn' },
                 { icon: PiggyBank, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Суралцах', sub: 'Мөнгө & хадгаламж', route: '/child/learn' },
               ].map(item => (
                 <TouchableOpacity key={item.label}
@@ -348,13 +347,13 @@ export default function ChildDashboard() {
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#1a1a2e' }}>Миний стикерүүд</Text>
               <View style={{ backgroundColor: '#C084FC15', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#C084FC' }}>{child.achievements.length}/{achievementsData.length}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#C084FC' }}>{child?.achievements?.length || 0}/{achievementsData.length}</Text>
               </View>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}
               style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
               {achievementsData.slice(0, 8).map((ach, i) => {
-                const unlocked = child.achievements.some(a => a.id === ach.id);
+                const unlocked = (child?.achievements || []).some(a => a.id === ach.id);
                 const s = STICKERS_JUNIOR[i % STICKERS_JUNIOR.length];
                 return (
                   <Animated.View key={ach.id} entering={ZoomIn.duration(360).delay(i * 60)}>

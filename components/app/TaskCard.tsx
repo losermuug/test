@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Task } from '@/contexts/AppContext';
+import { useApp, getAgeGroup } from '@/contexts/AppContext';
 import { Clock, CheckCircle, PartyPopper, Hand, ThumbsUp, Gift } from 'lucide-react-native';
+import VisualCoin from './VisualCoin';
 
 interface TaskCardProps {
   task: Task;
@@ -10,6 +12,10 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onAction, role }: TaskCardProps) {
+  const { getSelectedChild } = useApp();
+  const child = getSelectedChild();
+  const isJunior = child ? getAgeGroup(child.age) === 'junior' : false;
+
   const statusConfig: Record<string, { label: string; Icon: any; color: string; bg: string; btnBg: string }> = {
     pending: { label: 'Хүлээгдэж буй', Icon: Clock, color: '#FF9500', bg: 'bg-[#FF9500]/10', btnBg: 'bg-[#FF9500]' },
     completed: { label: 'Хийгдсэн', Icon: CheckCircle, color: '#007AFF', bg: 'bg-[#007AFF]/10', btnBg: 'bg-[#007AFF]' },
@@ -39,10 +45,19 @@ export default function TaskCard({ task, onAction, role }: TaskCardProps) {
             <Text className="text-sm text-[#AEAEB2] mt-0.5" numberOfLines={1}>{task.description}</Text>
           ) : null}
         </View>
-        <View className="items-end bg-[#34C759]/10 px-3 py-2 rounded-xl">
-          <View className="flex-row items-center gap-1">
-            <Gift size={12} color="#34C759" />
-            <Text className="text-lg font-black text-[#34C759]">₮{task.reward.toLocaleString()}</Text>
+        <View className={`items-end px-3 py-2 rounded-xl ${isJunior ? 'bg-[#FFF9C4]/40' : 'bg-[#34C759]/10'}`}>
+          <View className="flex-row items-center gap-1.5">
+            {isJunior ? (
+              <>
+                <VisualCoin size={22} />
+                <Text className="text-xl font-black text-[#F57F17] ml-0.5">x{Math.floor(task.reward / 1000)}</Text>
+              </>
+            ) : (
+              <>
+                <Gift size={12} color="#34C759" />
+                <Text className="text-lg font-black text-[#34C759]">₮{task.reward.toLocaleString()}</Text>
+              </>
+            )}
           </View>
         </View>
       </View>

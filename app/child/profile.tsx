@@ -6,6 +6,7 @@ import { useApp, achievementsData, getAgeGroup } from '@/contexts/AppContext';
 import AchievementBadge from '@/components/app/AchievementBadge';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import JuniorBackground from '@/components/app/JuniorBackground';
+import MoneyVisualizer from '@/components/app/MoneyVisualizer';
 import {
   User, Wallet, PiggyBank, Star, Flame, Trophy, BookOpen,
   TrendingDown, LogOut, RefreshCw, ChevronRight,
@@ -94,25 +95,41 @@ export default function ChildProfile() {
             <View className="flex-row gap-3 mb-3">
               <View className="flex-1 bg-[#34C759]/5 rounded-2xl p-3.5 items-center border border-[#34C759]/10">
                 <Wallet size={20} color="#34C759" />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5">Хэтэвч</Text>
-                <Text className="text-base font-black text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
+                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хэтэвч</Text>
+                {isJunior ? (
+                  <MoneyVisualizer amount={child.balance} size={24} textColor="#34C759" />
+                ) : (
+                  <Text className="text-base font-black text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
+                )}
               </View>
               <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
                 <PiggyBank size={20} color={primaryColor} />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5">Хадгаламж</Text>
-                <Text className="text-base font-black" style={{ color: primaryColor }}>₮{child.savings.toLocaleString()}</Text>
+                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хадгаламж</Text>
+                {isJunior ? (
+                  <MoneyVisualizer amount={child.savings} size={24} textColor={primaryColor} />
+                ) : (
+                  <Text className="text-base font-black" style={{ color: primaryColor }}>₮{child.savings.toLocaleString()}</Text>
+                )}
               </View>
             </View>
             <View className="flex-row gap-3">
               <View className="flex-1 bg-[#FF3B30]/5 rounded-2xl p-3.5 items-center border border-[#FF3B30]/10">
                 <TrendingDown size={20} color="#FF3B30" />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5">Нийт өр</Text>
-                <Text className="text-base font-black text-[#FF3B30]">₮{totalDebt.toLocaleString()}</Text>
+                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт өр</Text>
+                {isJunior ? (
+                  <MoneyVisualizer amount={totalDebt} size={24} textColor="#FF3B30" />
+                ) : (
+                  <Text className="text-base font-black text-[#FF3B30]">₮{totalDebt.toLocaleString()}</Text>
+                )}
               </View>
               <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
                 <Trophy size={20} color={primaryColor} />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5">Нийт олсон</Text>
-                <Text className="text-base font-black" style={{ color: primaryColor }}>₮{totalEarned.toLocaleString()}</Text>
+                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт олсон</Text>
+                {isJunior ? (
+                  <MoneyVisualizer amount={totalEarned} size={24} textColor={primaryColor} />
+                ) : (
+                  <Text className="text-base font-black" style={{ color: primaryColor }}>₮{totalEarned.toLocaleString()}</Text>
+                )}
               </View>
             </View>
           </View>

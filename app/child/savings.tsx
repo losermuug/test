@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp, getAgeGroup } from '@/contexts/AppContext';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import JuniorBackground from '@/components/app/JuniorBackground';
+import MoneyVisualizer from '@/components/app/MoneyVisualizer';
 import {
   PiggyBank, Wallet, ArrowDownToLine, ArrowUpFromLine, TrendingUp,
   Target, Sparkles, Shield, X, Star, Heart, Calculator,
@@ -152,10 +153,10 @@ export default function ChildSavings() {
               <View style={{ width: 80, height: 80, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.3)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 }}>
                 <PiggyBank size={42} color="#fff" />
               </View>
-              <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '700' }}>Миний хадгаламж</Text>
-              <Text style={{ fontSize: 42, fontWeight: '900', color: '#fff', letterSpacing: -1, marginTop: 4 }}>
-                ₮{child.savings.toLocaleString()}
-              </Text>
+              <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '800', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Миний хадгаламж</Text>
+              <View style={{ marginBottom: 8, minHeight: 48, justifyContent: 'center' }}>
+                <MoneyVisualizer amount={child.savings} size={42} textColor="#fff" />
+              </View>
 
               {/* Star progress */}
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
@@ -178,7 +179,7 @@ export default function ChildSavings() {
               {/* Progress bar */}
               <View style={{ width: '100%', marginTop: 16 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>Зорилго: ₮{savingsGoal.toLocaleString()}</Text>
+                  <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>Зорилго: {savingsGoal / 1000} зоос</Text>
                   <Text style={{ fontSize: 11, color: '#fff', fontWeight: '800' }}>{Math.round(progress)}%</Text>
                 </View>
                 <View style={{ height: 12, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 6, overflow: 'hidden' }}>
