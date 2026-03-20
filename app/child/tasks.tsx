@@ -1,16 +1,19 @@
 import React from 'react';
 import { View, Text, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useApp } from '@/contexts/AppContext';
+import { useApp, getAgeGroup } from '@/contexts/AppContext';
 import TaskCard from '@/components/app/TaskCard';
 import EmptyState from '@/components/app/EmptyState';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import JuniorBackground from '@/components/app/JuniorBackground';
 import { Clock, Send, PartyPopper } from 'lucide-react-native';
 
 export default function ChildTasks() {
   const { dispatch, getSelectedChild } = useApp();
   const child = getSelectedChild();
   if (!child) return null;
+
+  const isJunior = getAgeGroup(child.age) === 'junior';
 
   const pendingTasks = child.tasks.filter(t => t.status === 'pending');
   const completedTasks = child.tasks.filter(t => t.status === 'completed');
@@ -33,7 +36,8 @@ export default function ChildTasks() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F8FC]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
+      {isJunior && <JuniorBackground />}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2">
           <Text className="text-2xl font-black text-[#1a1a2e]">Даалгаврууд</Text>
@@ -48,8 +52,8 @@ export default function ChildTasks() {
               {pendingTasks.length > 0 && (
                 <Animated.View entering={FadeInDown.duration(500).delay(100)}>
                   <View className="flex-row items-center gap-2 mb-3">
-                    <Clock size={14} color="#FF9500" />
-                    <Text className="text-sm font-bold text-[#FF9500]">Хийх даалгавар</Text>
+                    <Clock size={14} color={isJunior ? '#C084FC' : '#0A7EA4'} />
+                    <Text className="text-sm font-bold" style={{ color: isJunior ? '#C084FC' : '#0A7EA4' }}>Хийх даалгавар</Text>
                   </View>
                   {pendingTasks.map(task => (
                     <TaskCard key={task.id} task={task} role="child" onAction={() => handleComplete(task.id)} />

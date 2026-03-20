@@ -12,9 +12,9 @@ export default function ChildLayout() {
   const isJunior = ageGroup === 'junior';
   const isSenior = ageGroup === 'senior';
 
-  // Theme colors based on age group
-  const activeColor = isJunior ? '#FF6B6B' : isSenior ? '#1a1a2e' : '#6C63FF';
-  const tabBg = isJunior ? '#FFF5F5' : '#FFFFFF';
+  // Theme colors unified to formal Fintech layout
+  const activeColor = isJunior ? '#C084FC' : '#0A7EA4';
+  const tabBg = '#FFFFFF';
 
   return (
     <Tabs
@@ -23,7 +23,7 @@ export default function ChildLayout() {
         tabBarStyle: {
           backgroundColor: tabBg,
           borderTopWidth: 1,
-          borderTopColor: isJunior ? '#FFE0E0' : '#F2F2F7',
+          borderTopColor: '#F2F2F7',
           height: Platform.OS === 'ios' ? 88 : 70,
           paddingBottom: Platform.OS === 'ios' ? 28 : 12,
           paddingTop: 10,
@@ -59,7 +59,7 @@ export default function ChildLayout() {
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? '#4ECDC415' : 'transparent',
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
               <PiggyBank size={isJunior ? 22 : 20} color={color} />
             </View>
@@ -69,14 +69,15 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="loans"
         options={{
-          title: isJunior ? 'Суралц' : 'Зээл',
+          title: 'Зээл',
+          href: isJunior ? null : undefined,
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? (isJunior ? '#FF950015' : activeColor + '15') : 'transparent',
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
-              {isJunior ? <BookOpen size={22} color={color} /> : <Wallet size={20} color={color} />}
+              <Wallet size={20} color={color} />
             </View>
           ),
         }}
@@ -99,7 +100,17 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="learn"
         options={{
-          href: null,
+          title: 'Суралцах',
+          href: isJunior ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              padding: 5,
+              borderRadius: 12,
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
+            }}>
+              <BookOpen size={22} color={color} />
+            </View>
+          ),
         }}
       />
       <Tabs.Screen

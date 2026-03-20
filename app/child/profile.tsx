@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useApp, achievementsData } from '@/contexts/AppContext';
+import { useApp, achievementsData, getAgeGroup } from '@/contexts/AppContext';
 import AchievementBadge from '@/components/app/AchievementBadge';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import JuniorBackground from '@/components/app/JuniorBackground';
 import {
   User, Wallet, PiggyBank, Star, Flame, Trophy, BookOpen,
   TrendingDown, LogOut, RefreshCw, ChevronRight,
@@ -21,6 +22,9 @@ export default function ChildProfile() {
   const child = getSelectedChild();
 
   if (!child) return null;
+
+  const isJunior = getAgeGroup(child.age) === 'junior';
+  const primaryColor = isJunior ? '#C084FC' : '#0A7EA4';
 
   const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
   const activeLoans = child.loans.filter(l => l.status === 'active');
@@ -62,22 +66,23 @@ export default function ChildProfile() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F8FC]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
+      {isJunior && <JuniorBackground />}
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         {/* Profile Header */}
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-6 items-center">
-          <View className="w-24 h-24 rounded-3xl bg-[#6C63FF] justify-center items-center mb-4 shadow-lg">
+          <View className="w-24 h-24 rounded-3xl justify-center items-center mb-4 shadow-lg border-2" style={{ backgroundColor: primaryColor, shadowColor: primaryColor, borderColor: isJunior ? '#F3E8FF' : '#E0F2FE' }}>
             <AvatarIcon size={48} color="#fff" />
           </View>
           <Text className="text-2xl font-black text-[#1a1a2e]">{child.name}</Text>
           <View className="flex-row items-center gap-2 mt-2">
-            <View className="flex-row items-center bg-[#FFD93D]/15 px-3 py-1.5 rounded-full gap-1">
-              <Star size={14} color="#FFD93D" fill="#FFD93D" />
-              <Text className="text-xs font-bold text-[#FF9500]">Итгэлцэл: {child.creditScore}/5</Text>
+            <View className="flex-row items-center px-3 py-1.5 rounded-full gap-1" style={{ backgroundColor: primaryColor + '15' }}>
+              <Star size={14} color={primaryColor} fill={primaryColor} />
+              <Text className="text-xs font-bold" style={{ color: primaryColor }}>Итгэлцэл: {child.creditScore}/5</Text>
             </View>
-            <View className="flex-row items-center bg-[#FF9500]/10 px-3 py-1.5 rounded-full gap-1">
-              <Flame size={14} color="#FF9500" />
-              <Text className="text-xs font-bold text-[#FF9500]">{child.streak} хоног</Text>
+            <View className="flex-row items-center px-3 py-1.5 rounded-full gap-1" style={{ backgroundColor: primaryColor + '15' }}>
+              <Flame size={14} color={primaryColor} />
+              <Text className="text-xs font-bold" style={{ color: primaryColor }}>{child.streak} хоног</Text>
             </View>
           </View>
         </Animated.View>
@@ -92,10 +97,10 @@ export default function ChildProfile() {
                 <Text className="text-xs text-[#AEAEB2] mt-1.5">Хэтэвч</Text>
                 <Text className="text-base font-black text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
               </View>
-              <View className="flex-1 bg-[#4ECDC4]/5 rounded-2xl p-3.5 items-center border border-[#4ECDC4]/10">
-                <PiggyBank size={20} color="#4ECDC4" />
+              <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
+                <PiggyBank size={20} color={primaryColor} />
                 <Text className="text-xs text-[#AEAEB2] mt-1.5">Хадгаламж</Text>
-                <Text className="text-base font-black text-[#4ECDC4]">₮{child.savings.toLocaleString()}</Text>
+                <Text className="text-base font-black" style={{ color: primaryColor }}>₮{child.savings.toLocaleString()}</Text>
               </View>
             </View>
             <View className="flex-row gap-3">
@@ -104,10 +109,10 @@ export default function ChildProfile() {
                 <Text className="text-xs text-[#AEAEB2] mt-1.5">Нийт өр</Text>
                 <Text className="text-base font-black text-[#FF3B30]">₮{totalDebt.toLocaleString()}</Text>
               </View>
-              <View className="flex-1 bg-[#6C63FF]/5 rounded-2xl p-3.5 items-center border border-[#6C63FF]/10">
-                <Trophy size={20} color="#6C63FF" />
+              <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
+                <Trophy size={20} color={primaryColor} />
                 <Text className="text-xs text-[#AEAEB2] mt-1.5">Нийт олсон</Text>
-                <Text className="text-base font-black text-[#6C63FF]">₮{totalEarned.toLocaleString()}</Text>
+                <Text className="text-base font-black" style={{ color: primaryColor }}>₮{totalEarned.toLocaleString()}</Text>
               </View>
             </View>
           </View>
@@ -118,10 +123,10 @@ export default function ChildProfile() {
           <Text className="text-base font-bold text-[#1a1a2e] mb-3">Статистик</Text>
           <View className="bg-white rounded-3xl border border-[#F2F2F7] shadow-sm overflow-hidden">
             {[
-              { label: 'Гүйцэтгэсэн даалгавар', value: `${completedTasks}`, icon: <Star size={18} color="#FFD93D" /> },
+              { label: 'Гүйцэтгэсэн даалгавар', value: `${completedTasks}`, icon: <Star size={18} color={primaryColor} /> },
               { label: 'Төлсөн зээл', value: `${paidLoans}`, icon: <TrendingDown size={18} color="#34C759" /> },
-              { label: 'Дууссан хичээл', value: `${child.lessonsCompleted.length}/6`, icon: <BookOpen size={18} color="#6C63FF" /> },
-              { label: 'Амжилтууд', value: `${child.achievements.length}/${achievementsData.length}`, icon: <Trophy size={18} color="#FF9500" /> },
+              { label: 'Дууссан хичээл', value: `${child.lessonsCompleted.length}/6`, icon: <BookOpen size={18} color={primaryColor} /> },
+              { label: 'Амжилтууд', value: `${child.achievements.length}/${achievementsData.length}`, icon: <Trophy size={18} color={primaryColor} /> },
             ].map((item, i) => (
               <View
                 key={i}

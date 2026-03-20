@@ -3,11 +3,20 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp, getAgeGroup } from '@/contexts/AppContext';
 import { lessonsData } from '@/constants/lessonsData';
-import { AGE_GROUP_CONFIG } from '@/constants/ageGroupData';
+import { AGE_GROUP_CONFIG, juniorMoneyLessons } from '@/constants/ageGroupData';
 import LessonCard from '@/components/app/LessonCard';
 import QuizComponent from '@/components/app/QuizComponent';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ArrowLeft, BookOpen, FileQuestion, ChevronLeft, ChevronRight, Star, Trophy } from 'lucide-react-native';
+import JuniorBackground from '@/components/app/JuniorBackground';
+import { 
+  ArrowLeft, BookOpen, FileQuestion, ChevronLeft, ChevronRight, 
+  Star, Trophy, PiggyBank, Heart, Coins, Sparkles, 
+  BadgeDollarSign, Zap, Info, HelpCircle
+} from 'lucide-react-native';
+
+const MONEY_ICON_MAP: Record<string, any> = {
+  Coins, PiggyBank, Heart, Star, BookOpen, BadgeDollarSign, Zap, Info, HelpCircle
+};
 
 type ViewMode = 'list' | 'lesson' | 'quiz';
 
@@ -17,6 +26,7 @@ export default function ChildLearn() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedLesson, setSelectedLesson] = useState<typeof lessonsData[0] | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [activeMoneyLesson, setActiveMoneyLesson] = useState<string | null>(null);
 
   if (!child) return null;
 
@@ -55,6 +65,7 @@ export default function ChildLearn() {
 
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+        {isJunior && <JuniorBackground />}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2">
             <Text className="text-2xl font-black text-[#1a1a2e]">
@@ -67,10 +78,10 @@ export default function ChildLearn() {
           </Animated.View>
 
           <Animated.View entering={FadeInDown.duration(500).delay(100)} className="px-6 mt-3 mb-5">
-            <View className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: isJunior ? '#FFE0E0' : isSenior ? '#E0E0EA' : '#E5E5EA' }}>
+            <View className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: isJunior ? '#F3E8FF' : isSenior ? '#E0E0EA' : '#E5E5EA' }}>
               <View
                 className="h-full rounded-full"
-                style={{ width: `${progressPct}%`, backgroundColor: isJunior ? '#FF6B6B' : isSenior ? '#6C63FF' : '#34C759' }}
+                style={{ width: `${progressPct}%`, backgroundColor: isJunior ? '#C084FC' : isSenior ? '#0A7EA4' : '#34C759' }}
               />
             </View>
           </Animated.View>
@@ -78,10 +89,10 @@ export default function ChildLearn() {
           {/* Age group badge */}
           {isJunior && (
             <Animated.View entering={FadeInDown.duration(500).delay(150)} className="px-6 mb-4">
-              <View className="bg-[#FFD93D]/15 rounded-2xl p-4 border-2 border-[#FFD93D]/30 flex-row items-center gap-3">
-                <Star size={24} color="#FF9500" />
+              <View className="bg-[#C084FC]/15 rounded-2xl p-4 border-2 border-[#C084FC]/30 flex-row items-center gap-3">
+                <Star size={24} color="#C084FC" />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-[#FF9500]">Бяцхан санхүүч</Text>
+                  <Text className="text-sm font-bold text-[#C084FC]">Бяцхан санхүүч</Text>
                   <Text className="text-xs text-[#8E8E93]">Хичээл бүрийг дуусгаад badge авна!</Text>
                 </View>
               </View>
@@ -90,17 +101,109 @@ export default function ChildLearn() {
 
           {isSenior && (
             <Animated.View entering={FadeInDown.duration(500).delay(150)} className="px-6 mb-4">
-              <View className="bg-[#6C63FF]/5 rounded-2xl p-4 border border-[#6C63FF]/15 flex-row items-center gap-3">
-                <Trophy size={24} color="#6C63FF" />
+              <View className="bg-[#0A7EA4]/5 rounded-2xl p-4 border border-[#0A7EA4]/15 flex-row items-center gap-3">
+                <Trophy size={24} color="#0A7EA4" />
                 <View className="flex-1">
-                  <Text className="text-sm font-bold text-[#6C63FF]">Ахлах санхүүч</Text>
+                  <Text className="text-sm font-bold text-[#0A7EA4]">Ахлах санхүүч</Text>
                   <Text className="text-xs text-[#8E8E93]">Бүх хичээлийг гүнзгий ойлголттойгоор сур</Text>
                 </View>
               </View>
             </Animated.View>
           )}
 
-          <Animated.View entering={FadeInDown.duration(500).delay(200)} className="px-6">
+          {/* Junior Money & Savings Lessons */}
+          {isJunior && (
+            <Animated.View entering={FadeInDown.duration(500).delay(180)} className="px-6 mb-5">
+              <View className="flex-row items-center gap-2 mb-3">
+                <BadgeDollarSign size={20} color="#1a1a2e" />
+                <Text className="text-lg font-black text-[#1a1a2e]">Мөнгө & Хадгаламж</Text>
+              </View>
+              {activeMoneyLesson ? (() => {
+                const ml = juniorMoneyLessons.find(l => l.id === activeMoneyLesson);
+                if (!ml) return null;
+                const done = child.achievements.some(a => a.id === ml.badgeId);
+                const MoneyIcon = MONEY_ICON_MAP[ml.icon] || Coins;
+                return (
+                  <Animated.View entering={FadeInDown.duration(400)}>
+                    <View className="bg-white rounded-3xl p-5 border-2" style={{ borderColor: ml.color + '40' }}>
+                      <TouchableOpacity
+                        className="w-9 h-9 rounded-full bg-[#F3E8FF] justify-center items-center mb-3"
+                        onPress={() => setActiveMoneyLesson(null)}
+                      >
+                        <ArrowLeft size={16} color="#C084FC" />
+                      </TouchableOpacity>
+                      <View className="items-center mb-4">
+                        <View className="w-20 h-20 rounded-3xl justify-center items-center mb-3" style={{ backgroundColor: ml.bgColor }}>
+                          <MoneyIcon size={40} color={ml.color} />
+                        </View>
+                        <Text className="text-xl font-black text-[#1a1a2e] text-center">{ml.title}</Text>
+                      </View>
+                      <Text className="text-sm text-[#3C3C43] leading-6 mb-4">{ml.content}</Text>
+                      <View className="rounded-2xl p-4 mb-4" style={{ backgroundColor: ml.bgColor }}>
+                        <Text className="text-xs font-bold mb-1" style={{ color: ml.color }}>Сонирхолтой баримт:</Text>
+                        <Text className="text-xs text-[#3C3C43] leading-5">{ml.funFact}</Text>
+                      </View>
+                      {done ? (
+                        <View className="bg-[#C084FC]/10 rounded-2xl p-3 items-center border border-[#C084FC]/30">
+                          <Text className="text-sm font-black text-[#C084FC]">Badge авсан! ⭐</Text>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          className="rounded-2xl py-4 items-center" style={{ backgroundColor: ml.color }}
+                          onPress={() => {
+                            dispatch({ type: 'UNLOCK_ACHIEVEMENT', childId: child.id, achievementId: ml.badgeId });
+                            setActiveMoneyLesson(null);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text className="text-white text-base font-black">Badge авах! 🏆</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </Animated.View>
+                );
+              })() : (
+                <View className="gap-3">
+                  {juniorMoneyLessons.map((ml, i) => {
+                    const done = child.achievements.some(a => a.id === ml.badgeId);
+                    const MoneyIcon = MONEY_ICON_MAP[ml.icon] || Coins;
+                    return (
+                      <Animated.View key={ml.id} entering={FadeInDown.duration(400).delay(i * 80)}>
+                        <TouchableOpacity
+                          className="bg-white rounded-2xl p-4 flex-row items-center gap-3 border-2"
+                          style={{ borderColor: done ? '#C084FC40' : ml.color + '30' }}
+                          onPress={() => setActiveMoneyLesson(ml.id)}
+                          activeOpacity={0.7}
+                        >
+                          <View className="w-14 h-14 rounded-2xl justify-center items-center" style={{ backgroundColor: ml.bgColor }}>
+                            <MoneyIcon size={28} color={ml.color} />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-sm font-black text-[#1a1a2e]">{ml.title}</Text>
+                            <Text className="text-xs text-[#8E8E93] mt-0.5">{ml.description}</Text>
+                          </View>
+                          {done && (
+                            <View className="w-7 h-7 rounded-full bg-[#C084FC] items-center justify-center">
+                              <Star size={14} color="#fff" fill="#fff" />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      </Animated.View>
+                    );
+                  })}
+                </View>
+              )}
+            </Animated.View>
+          )}
+
+          {/* Regular lessons */}
+          <Animated.View entering={FadeInDown.duration(500).delay(isJunior ? 300 : 200)} className="px-6">
+            {isJunior && (
+              <View className="flex-row items-center gap-2 mb-3">
+                <BookOpen size={20} color="#1a1a2e" />
+                <Text className="text-lg font-black text-[#1a1a2e]">Санхүүгийн хичээл</Text>
+              </View>
+            )}
             {availableLessons.map((lesson, i) => (
               <LessonCard
                 key={lesson.id}
@@ -123,14 +226,15 @@ export default function ChildLearn() {
 
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+        {isJunior && <JuniorBackground />}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
             <TouchableOpacity
               className="w-10 h-10 rounded-2xl justify-center items-center"
-              style={{ backgroundColor: isJunior ? '#FFE0E0' : isSenior ? '#E0E0EA' : '#F2F2F7' }}
+              style={{ backgroundColor: isJunior ? '#F3E8FF' : isSenior ? '#E0E0EA' : '#F2F2F7' }}
               onPress={() => setViewMode('list')}
             >
-              <ArrowLeft size={18} color={isJunior ? '#FF6B6B' : '#1a1a2e'} />
+              <ArrowLeft size={18} color={isJunior ? '#C084FC' : '#1a1a2e'} />
             </TouchableOpacity>
             <View className="flex-1">
               <Text className="text-lg font-bold text-[#1a1a2e]">{selectedLesson.title}</Text>
@@ -146,8 +250,8 @@ export default function ChildLearn() {
                 className="flex-1 h-1.5 rounded-full"
                 style={{
                   backgroundColor: i <= currentStep
-                    ? (isJunior ? '#FF6B6B' : isSenior ? '#6C63FF' : '#6C63FF')
-                    : (isJunior ? '#FFE0E0' : '#E5E5EA')
+                    ? (isJunior ? '#C084FC' : isSenior ? '#0A7EA4' : '#0A7EA4')
+                    : (isJunior ? '#F3E8FF' : '#E5E5EA')
                 }}
               />
             ))}
@@ -159,14 +263,14 @@ export default function ChildLearn() {
               style={{
                 backgroundColor: '#fff',
                 borderWidth: isJunior ? 2 : 1,
-                borderColor: isJunior ? '#FFE0E0' : isSenior ? '#E0E0EA' : '#F2F2F7',
+                borderColor: isJunior ? '#F3E8FF' : isSenior ? '#E0E0EA' : '#F2F2F7',
               }}
             >
               <View
                 className="w-16 h-16 rounded-3xl justify-center items-center self-center mb-4"
-                style={{ backgroundColor: (isJunior ? '#FF6B6B' : '#6C63FF') + '10' }}
+                style={{ backgroundColor: (isJunior ? '#C084FC' : '#0A7EA4') + '10' }}
               >
-                <BookOpen size={30} color={isJunior ? '#FF6B6B' : '#6C63FF'} />
+                <BookOpen size={30} color={isJunior ? '#C084FC' : '#0A7EA4'} />
               </View>
               <Text className="text-xl font-bold text-[#1a1a2e] text-center mb-4">{step.title}</Text>
               <Text className="text-base text-[#3C3C43] leading-7">{step.content}</Text>
@@ -177,7 +281,7 @@ export default function ChildLearn() {
             {currentStep > 0 && (
               <TouchableOpacity
                 className="flex-1 rounded-2xl py-4 items-center flex-row justify-center gap-2"
-                style={{ backgroundColor: isJunior ? '#FFE0E0' : '#F2F2F7' }}
+                style={{ backgroundColor: isJunior ? '#F3E8FF' : '#F2F2F7' }}
                 onPress={() => setCurrentStep(p => p - 1)}
                 activeOpacity={0.7}
               >
@@ -187,7 +291,7 @@ export default function ChildLearn() {
             )}
             <TouchableOpacity
               className="flex-1 rounded-2xl py-4 items-center flex-row justify-center gap-2"
-              style={{ backgroundColor: isJunior ? '#FF6B6B' : '#6C63FF' }}
+              style={{ backgroundColor: isJunior ? '#C084FC' : '#0A7EA4' }}
               onPress={() => isLast ? setViewMode('quiz') : setCurrentStep(p => p + 1)}
               activeOpacity={0.7}
             >
@@ -206,17 +310,18 @@ export default function ChildLearn() {
   if (viewMode === 'quiz' && selectedLesson) {
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+        {isJunior && <JuniorBackground />}
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
             <TouchableOpacity
               className="w-10 h-10 rounded-2xl justify-center items-center"
-              style={{ backgroundColor: isJunior ? '#FFE0E0' : '#F2F2F7' }}
+              style={{ backgroundColor: isJunior ? '#F3E8FF' : '#F2F2F7' }}
               onPress={() => setViewMode('lesson')}
             >
-              <ArrowLeft size={18} color={isJunior ? '#FF6B6B' : '#1a1a2e'} />
+              <ArrowLeft size={18} color={isJunior ? '#C084FC' : '#1a1a2e'} />
             </TouchableOpacity>
             <View className="flex-row items-center gap-2">
-              <FileQuestion size={18} color={isJunior ? '#FF6B6B' : '#6C63FF'} />
+              <FileQuestion size={18} color={isJunior ? '#C084FC' : '#0A7EA4'} />
               <Text className="text-lg font-bold text-[#1a1a2e]">
                 Quiz: {selectedLesson.title}
               </Text>
@@ -229,7 +334,7 @@ export default function ChildLearn() {
               style={{
                 backgroundColor: '#fff',
                 borderWidth: isJunior ? 2 : 1,
-                borderColor: isJunior ? '#FFE0E0' : '#F2F2F7',
+                borderColor: isJunior ? '#F3E8FF' : '#F2F2F7',
               }}
             >
               <QuizComponent questions={selectedLesson.quiz} onComplete={handleQuizComplete} />

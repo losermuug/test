@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useApp, achievementsData, getAgeGroup } from '@/contexts/AppContext';
 import { AGE_GROUP_CONFIG } from '@/constants/ageGroupData';
 import AchievementBadge from '@/components/app/AchievementBadge';
+import JuniorBackground from '@/components/app/JuniorBackground';
 import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 import {
   Wallet, Flame, Star, CheckSquare, BookOpen, LogOut,
@@ -176,34 +177,34 @@ export default function ChildDashboard() {
 
   // Sticker sets for achievements
   const STICKERS_JUNIOR = [
-    { icon: Star,    color: '#F59E0B', bg: '#FEF3C7' },
-    { icon: Rocket,  color: '#6366F1', bg: '#EDE9FE' },
-    { icon: Heart,   color: '#EC4899', bg: '#FCE7F3' },
-    { icon: Trophy,  color: '#D97706', bg: '#FEF3C7' },
-    { icon: Gem,     color: '#0EA5E9', bg: '#E0F2FE' },
-    { icon: Medal,   color: '#10B981', bg: '#D1FAE5' },
-    { icon: Crown,   color: '#F59E0B', bg: '#FEF9C3' },
-    { icon: Sparkles,color: '#A855F7', bg: '#F3E8FF' },
+    { icon: Star,    color: '#C084FC', bg: '#C084FC15' },
+    { icon: Rocket,  color: '#C084FC', bg: '#C084FC15' },
+    { icon: Heart,   color: '#C084FC', bg: '#C084FC15' },
+    { icon: Trophy,  color: '#C084FC', bg: '#C084FC15' },
+    { icon: Gem,     color: '#C084FC', bg: '#C084FC15' },
+    { icon: Medal,   color: '#C084FC', bg: '#C084FC15' },
+    { icon: Crown,   color: '#C084FC', bg: '#C084FC15' },
+    { icon: Sparkles,color: '#C084FC', bg: '#C084FC15' },
   ];
   const STICKERS_TEEN = [
-    { icon: Trophy,      color: '#6C63FF', bg: '#EEEEFF' },
-    { icon: Star,        color: '#FF9500', bg: '#FFF4E0' },
-    { icon: Zap,         color: '#34C759', bg: '#E8FFF0' },
-    { icon: Heart,       color: '#FF3B8C', bg: '#FFE8F4' },
-    { icon: Award,       color: '#6C63FF', bg: '#EEEEFF' },
-    { icon: Gem,         color: '#0EA5E9', bg: '#E0F4FF' },
-    { icon: Crown,       color: '#FF9500', bg: '#FFF4E0' },
-    { icon: ShieldCheck, color: '#34C759', bg: '#E8FFF0' },
+    { icon: Trophy,      color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Star,        color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Zap,         color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Heart,       color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Award,       color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Gem,         color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Crown,       color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: ShieldCheck, color: '#0A7EA4', bg: '#0A7EA415' },
   ];
   const STICKERS_SENIOR = [
-    { icon: BadgeCheck,  color: '#00C896', bg: '#00C89618' },
-    { icon: Trophy,      color: '#0A84FF', bg: '#0A84FF18' },
-    { icon: Award,       color: '#BF5AF2', bg: '#BF5AF218' },
-    { icon: Star,        color: '#FFB800', bg: '#FFB80018' },
-    { icon: Gem,         color: '#00C896', bg: '#00C89618' },
-    { icon: Crown,       color: '#FF9500', bg: '#FF950018' },
-    { icon: ShieldCheck, color: '#0A84FF', bg: '#0A84FF18' },
-    { icon: Sparkles,    color: '#BF5AF2', bg: '#BF5AF218' },
+    { icon: BadgeCheck,  color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Trophy,      color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Award,       color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Star,        color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Gem,         color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Crown,       color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: ShieldCheck, color: '#0A7EA4', bg: '#0A7EA415' },
+    { icon: Sparkles,    color: '#0A7EA4', bg: '#0A7EA415' },
   ];
 
   // ═══════════════════════════════════════════════════════════
@@ -214,20 +215,21 @@ export default function ChildDashboard() {
   if (isJunior) {
     return (
       <View style={{ flex: 1, backgroundColor: '#FDF4FF' }}>
+        <JuniorBackground />
         <TransactionModal visible={modalType !== null} type={modalType} balance={child.balance}
           onClose={() => setModalType(null)} onConfirm={handleTransaction} theme="junior" />
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 52 + insets.bottom }}>
 
-          {/* Purple sky header */}
+          {/* Header */}
           <View style={{
             backgroundColor: '#C084FC', 
             paddingTop: insets.top + 8, 
             paddingBottom: 32,
             paddingHorizontal: 20, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, overflow: 'hidden',
           }}>
-            <View style={{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: '#A855F730', top: -60, right: -30 }} />
-            <View style={{ position: 'absolute', width: 90, height: 90, borderRadius: 45, backgroundColor: '#E879F925', bottom: 0, left: 15 }} />
+            <View style={{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.1)', top: -60, right: -30 }} />
+            <View style={{ position: 'absolute', width: 90, height: 90, borderRadius: 45, backgroundColor: 'rgba(255,255,255,0.05)', bottom: 0, left: 15 }} />
 
             {/* Top bar */}
             <Animated.View entering={FadeInDown.duration(400)}
@@ -236,24 +238,24 @@ export default function ChildDashboard() {
                 <View style={{
                   width: 56, height: 56, borderRadius: 20, backgroundColor: '#fff',
                   justifyContent: 'center', alignItems: 'center',
-                  shadowColor: '#7C3AED', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
-                  borderWidth: 3, borderColor: '#F0ABFC',
+                  shadowColor: '#C084FC', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+                  borderWidth: 3, borderColor: '#F3E8FF',
                 }}>
                   <AvatarIcon size={26} color="#C084FC" />
                 </View>
                 <View>
-                  <Text style={{ fontSize: 12, color: '#F0ABFC', fontWeight: '700' }}>Сайн уу!</Text>
+                  <Text style={{ fontSize: 12, color: '#E0F2FE', fontWeight: '700' }}>Сайн уу!</Text>
                   <Text style={{ fontSize: 24, color: '#fff', fontWeight: '900' }}>{child.name}</Text>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                 {/* Flame sticker */}
-                <View style={{ backgroundColor: '#A855F7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', gap: 5, alignItems: 'center' }}>
                   <Flame size={16} color="#FFD93D" fill="#FFD93D" />
                   <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>{child.streak}</Text>
                 </View>
                 <TouchableOpacity onPress={() => { dispatch({ type: 'LOGOUT' }); router.replace('/'); }}
-                  style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: '#A855F7', justifyContent: 'center', alignItems: 'center' }}>
+                  style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' }}>
                   <LogOut size={16} color="#fff" />
                 </TouchableOpacity>
               </View>
@@ -262,10 +264,10 @@ export default function ChildDashboard() {
             {/* Balance card with PiggyBank sticker */}
             <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{
               marginTop: 20, backgroundColor: '#fff', borderRadius: 32, padding: 24, alignItems: 'center',
-              shadowColor: '#9333EA', shadowOpacity: 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
+              shadowColor: '#C084FC', shadowOpacity: 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
             }}>
-              <Sticker icon={PiggyBank} color="#EC4899" bg="#FCE7F3" size={34} tileSize={66} radius={22} />
-              <Text style={{ fontSize: 11, color: '#A855F7', fontWeight: '800', marginTop: 12, letterSpacing: 1.2, textTransform: 'uppercase' }}>Миний хэтэвч</Text>
+              <Sticker icon={PiggyBank} color="#C084FC" bg="#C084FC15" size={34} tileSize={66} radius={22} />
+              <Text style={{ fontSize: 11, color: '#C084FC', fontWeight: '800', marginTop: 12, letterSpacing: 1.2, textTransform: 'uppercase' }}>Миний хэтэвч</Text>
               <Text style={{ fontSize: 46, fontWeight: '900', color: '#1a1a2e', letterSpacing: -2, marginTop: 4 }}>
                 ₮{child.balance.toLocaleString()}
               </Text>
@@ -290,9 +292,9 @@ export default function ChildDashboard() {
             style={{ flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 16 }}>
             <TouchableOpacity
               style={{
-                flex: 1, backgroundColor: '#4ADE80', borderRadius: 28, paddingVertical: 22,
+                flex: 1, backgroundColor: '#34C759', borderRadius: 28, paddingVertical: 22,
                 alignItems: 'center', gap: 8,
-                shadowColor: '#16A34A', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
+                shadowColor: '#34C759', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
               }}
               onPress={() => setModalType('deposit')} activeOpacity={0.82}>
               <Sticker icon={HandCoins} color="#fff" bg="rgba(255,255,255,0.3)" size={24} tileSize={50} radius={18} shadow={false} />
@@ -300,9 +302,9 @@ export default function ChildDashboard() {
             </TouchableOpacity>
             <TouchableOpacity
               style={{
-                flex: 1, backgroundColor: '#FB923C', borderRadius: 28, paddingVertical: 22,
+                flex: 1, backgroundColor: '#C084FC', borderRadius: 28, paddingVertical: 22,
                 alignItems: 'center', gap: 8,
-                shadowColor: '#EA580C', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
+                shadowColor: '#C084FC', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
               }}
               onPress={() => setModalType('withdraw')} activeOpacity={0.82}>
               <Sticker icon={ShoppingBag} color="#fff" bg="rgba(255,255,255,0.3)" size={24} tileSize={50} radius={18} shadow={false} />
@@ -315,9 +317,9 @@ export default function ChildDashboard() {
             <Text style={{ fontSize: 18, fontWeight: '900', color: '#1a1a2e', marginBottom: 14 }}>Юу хийх вэ?</Text>
             <View style={{ gap: 10 }}>
               {[
-                { icon: CheckSquare, iColor: '#059669', iBg: '#D1FAE5', bColor: '#6EE7B7', cardBg: '#F0FFF8', label: 'Даалгавар', sub: `${pendingTasks} хүлээж байна`, route: '/child/tasks' },
-                { icon: GraduationCap, iColor: '#D97706', iBg: '#FEF3C7', bColor: '#FCD34D', cardBg: '#FFFBEB', label: 'Хичээл', sub: `${child.lessonsCompleted.length}/6 хийсэн`, route: '/child/learn' },
-                { icon: Banknote, iColor: '#7C3AED', iBg: '#EDE9FE', bColor: '#C4B5FD', cardBg: '#F5F3FF', label: 'Зээл', sub: `${activeLoans.length} идэвхтэй`, route: '/child/loans' },
+                { icon: CheckSquare, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Даалгавар', sub: `${pendingTasks} хүлээж байна`, route: '/child/tasks' },
+                { icon: GraduationCap, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Хичээл', sub: `${child.lessonsCompleted.length}/6 хийсэн`, route: '/child/learn' },
+                { icon: PiggyBank, iColor: '#C084FC', iBg: '#C084FC15', bColor: '#F2F2F7', cardBg: '#FFFFFF', label: 'Суралцах', sub: 'Мөнгө & хадгаламж', route: '/child/learn' },
               ].map(item => (
                 <TouchableOpacity key={item.label}
                   style={{
@@ -345,8 +347,8 @@ export default function ChildDashboard() {
           <Animated.View entering={FadeInDown.duration(500).delay(280)} style={{ marginTop: 28, paddingHorizontal: 20 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <Text style={{ fontSize: 18, fontWeight: '900', color: '#1a1a2e' }}>Миний стикерүүд</Text>
-              <View style={{ backgroundColor: '#F3E8FF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
-                <Text style={{ fontSize: 12, fontWeight: '800', color: '#A855F7' }}>{child.achievements.length}/{achievementsData.length}</Text>
+              <View style={{ backgroundColor: '#C084FC15', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#C084FC' }}>{child.achievements.length}/{achievementsData.length}</Text>
               </View>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}
@@ -573,10 +575,10 @@ export default function ChildDashboard() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 44 + insets.bottom }}>
 
-        {/* Gradient hero */}
-        <View style={{ backgroundColor: '#6C63FF', paddingTop: insets.top + 8, paddingBottom: 36, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, overflow: 'hidden' }}>
-          <View style={{ position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: '#5A52EE', top: -70, right: -40 }} />
-          <View style={{ position: 'absolute', width: 110, height: 110, borderRadius: 55, backgroundColor: '#8B85FF28', bottom: -10, left: 20 }} />
+        {/* Minimal formal hero */}
+        <View style={{ backgroundColor: '#0A7EA4', paddingTop: insets.top + 8, paddingBottom: 36, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.08)', top: -70, right: -40 }} />
+          <View style={{ position: 'absolute', width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.05)', bottom: -10, left: 20 }} />
 
           <Animated.View entering={FadeInDown.duration(400)}
             style={{ paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -641,7 +643,7 @@ export default function ChildDashboard() {
             <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Цэнэглэх</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ flex: 1, backgroundColor: '#FF9500', borderRadius: 22, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, shadowColor: '#FF9500', shadowOpacity: 0.38, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}
+            style={{ flex: 1, backgroundColor: '#0A7EA4', borderRadius: 22, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, shadowColor: '#0A7EA4', shadowOpacity: 0.38, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}
             onPress={() => setModalType('withdraw')} activeOpacity={0.82}>
             <Sticker icon={ArrowUpFromLine} color="#fff" bg="rgba(255,255,255,0.25)" size={16} tileSize={30} radius={10} shadow={false} />
             <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Таталт</Text>
@@ -653,9 +655,9 @@ export default function ChildDashboard() {
           <Text style={{ fontSize: 15, fontWeight: '900', color: '#1a1a2e', marginBottom: 14 }}>Хурдан үйлдэл</Text>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             {[
-              { icon: CheckSquare,      color: '#34C759', bg: '#E8FFF0', border: '#34C75920', label: 'Даалгавар', sub: `${pendingTasks} хүлээж буй`, route: '/child/tasks' },
-              { icon: CircleDollarSign, color: '#6C63FF', bg: '#EEEEFF', border: '#6C63FF20', label: 'Зээл',      sub: `${activeLoans.length} идэвхтэй`, route: '/child/loans' },
-              { icon: BookOpen,         color: '#FF9500', bg: '#FFF4E0', border: '#FF950020', label: 'Сурах',     sub: `${child.lessonsCompleted.length}/6`, route: '/child/learn' },
+              { icon: CheckSquare,      color: '#0A7EA4', bg: '#E0F2FE', border: '#0A7EA420', label: 'Даалгавар', sub: `${pendingTasks} хүлээж буй`, route: '/child/tasks' },
+              { icon: CircleDollarSign, color: '#0A7EA4', bg: '#E0F2FE', border: '#0A7EA420', label: 'Зээл',      sub: `Хүүгүй · ${activeLoans.length} идэвхтэй`, route: '/child/loans' },
+              { icon: BookOpen,         color: '#0A7EA4', bg: '#E0F2FE', border: '#0A7EA420', label: 'Сурах',     sub: `${child.lessonsCompleted.length}/6`, route: '/child/learn' },
             ].map(item => (
               <TouchableOpacity key={item.label}
                 style={{ flex: 1, backgroundColor: '#fff', borderRadius: 24, paddingVertical: 20, alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: item.border }}
@@ -673,13 +675,13 @@ export default function ChildDashboard() {
           <View style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, borderWidth: 1, borderColor: '#EBEBF5' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <Sticker icon={Zap} color="#6C63FF" bg="#EEEEFF" size={15} tileSize={32} radius={10} />
+                <Sticker icon={Zap} color="#0A7EA4" bg="#0A7EA415" size={15} tileSize={32} radius={10} />
                 <Text style={{ fontSize: 14, fontWeight: '900', color: '#1a1a2e' }}>Хичээлийн явц</Text>
               </View>
-              <Text style={{ fontSize: 13, fontWeight: '700', color: '#6C63FF' }}>{child.lessonsCompleted.length}/6</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#0A7EA4' }}>{child.lessonsCompleted.length}/6</Text>
             </View>
             <View style={{ backgroundColor: '#F0F0FB', borderRadius: 10, height: 12, overflow: 'hidden', marginBottom: 10 }}>
-              <View style={{ width: `${(child.lessonsCompleted.length / 6) * 100}%`, backgroundColor: '#6C63FF', height: '100%', borderRadius: 10 }} />
+              <View style={{ width: `${(child.lessonsCompleted.length / 6) * 100}%`, backgroundColor: '#0A7EA4', height: '100%', borderRadius: 10 }} />
             </View>
             <Text style={{ fontSize: 11, color: '#AEAEB2', fontWeight: '600' }}>
               {6 - child.lessonsCompleted.length > 0
@@ -693,8 +695,8 @@ export default function ChildDashboard() {
         <Animated.View entering={FadeInDown.duration(500).delay(300)} style={{ marginTop: 22 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginBottom: 14 }}>
             <Text style={{ fontSize: 15, fontWeight: '900', color: '#1a1a2e' }}>Амжилтууд</Text>
-            <View style={{ backgroundColor: '#EEEEFF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#6C63FF' }}>{child.achievements.length}/{achievementsData.length}</Text>
+            <View style={{ backgroundColor: '#0A7EA415', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#0A7EA4' }}>{child.achievements.length}/{achievementsData.length}</Text>
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>

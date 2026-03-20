@@ -1,11 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Lesson } from '@/constants/lessonsData';
-import { BookOpen, HelpCircle, ChevronRight, CheckCircle2 } from 'lucide-react-native';
+import * as LucideIcons from 'lucide-react-native';
+import { HelpCircle, ChevronRight, CheckCircle2 } from 'lucide-react-native';
 
-const LESSON_COLORS = [
-  '#6C63FF', '#FF6B6B', '#4ECDC4', '#FFD93D', '#FF9500', '#34C759',
-];
+const PRIMARY_COLOR = '#0A7EA4';
 
 interface LessonCardProps {
   lesson: Lesson;
@@ -15,7 +14,7 @@ interface LessonCardProps {
 }
 
 export default function LessonCard({ lesson, isCompleted, onPress, index = 0 }: LessonCardProps) {
-  const color = LESSON_COLORS[index % LESSON_COLORS.length];
+  const Icon = (LucideIcons as any)[lesson.icon] || LucideIcons.BookOpen;
 
   return (
     <TouchableOpacity
@@ -27,9 +26,9 @@ export default function LessonCard({ lesson, isCompleted, onPress, index = 0 }: 
     >
       <View
         className="w-14 h-14 rounded-2xl justify-center items-center mr-4 relative"
-        style={{ backgroundColor: color + '15' }}
+        style={{ backgroundColor: PRIMARY_COLOR + '15' }}
       >
-        <BookOpen size={26} color={color} />
+        <Icon size={26} color={PRIMARY_COLOR} />
         {isCompleted && (
           <View className="absolute -bottom-1 -right-1 bg-[#34C759] w-5 h-5 rounded-full justify-center items-center border-2 border-white">
             <CheckCircle2 size={10} color="#fff" />
@@ -41,7 +40,7 @@ export default function LessonCard({ lesson, isCompleted, onPress, index = 0 }: 
         <Text className="text-sm text-[#AEAEB2] leading-5" numberOfLines={1}>{lesson.description}</Text>
         <View className="flex-row gap-4 mt-2">
           <View className="flex-row items-center gap-1">
-            <BookOpen size={11} color="#C7C7CC" />
+            <LucideIcons.BookOpen size={11} color="#C7C7CC" />
             <Text className="text-xs text-[#C7C7CC] font-medium">{lesson.steps.length} хичээл</Text>
           </View>
           <View className="flex-row items-center gap-1">
