@@ -1,245 +1,728 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Modal, Alert, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useApp, achievementsData } from '@/contexts/AppContext';
+import { useApp, achievementsData, getAgeGroup } from '@/contexts/AppContext';
+import { AGE_GROUP_CONFIG } from '@/constants/ageGroupData';
 import AchievementBadge from '@/components/app/AchievementBadge';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInRight, ZoomIn } from 'react-native-reanimated';
 import {
   Wallet, Flame, Star, CheckSquare, BookOpen, LogOut,
-  TrendingDown, ArrowRight, Rocket, ShieldCheck, Sparkles, GraduationCap,
-  ArrowDownToLine, ArrowUpFromLine, X,
+  TrendingDown, Rocket, ShieldCheck, Sparkles, GraduationCap,
+  ArrowDownToLine, ArrowUpFromLine, X, Trophy, Zap,
+  Award, Crown, ChevronRight, Lock, PiggyBank,
+  Heart, Gem, Medal, HandCoins, Banknote,
+  CircleDollarSign, ReceiptText, BrainCircuit,
+  ShoppingBag, Lightbulb, BadgeCheck, BadgeDollarSign,
 } from 'lucide-react-native';
 
 const AVATAR_ICONS: Record<string, any> = {
   rocket: Rocket, star: Star, shield: ShieldCheck, sparkle: Sparkles, graduate: GraduationCap,
 };
 
+// ─── Lucide Sticker Component ──────────────────────────────────────────────
+// A rounded colored tile containing a Lucide icon — the "sticker"
+function Sticker({
+  icon: Icon,
+  color,
+  bg,
+  size = 22,
+  tileSize = 48,
+  radius = 16,
+  shadow = true,
+}: {
+  icon: any;
+  color: string;
+  bg: string;
+  size?: number;
+  tileSize?: number;
+  radius?: number;
+  shadow?: boolean;
+}) {
+  return (
+    <View style={{
+      width: tileSize, height: tileSize, borderRadius: radius,
+      backgroundColor: bg,
+      justifyContent: 'center', alignItems: 'center',
+      ...(shadow ? {
+        shadowColor: color,
+        shadowOpacity: 0.22,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 3 },
+      } : {}),
+    }}>
+      <Icon size={size} color={color} />
+    </View>
+  );
+}
+
+// ─── Shared Bottom-Sheet Modal ─────────────────────────────────────────────
+function TransactionModal({
+  visible, type, balance, onClose, onConfirm, theme,
+}: {
+  visible: boolean;
+  type: 'deposit' | 'withdraw' | null;
+  balance: number;
+  onClose: () => void;
+  onConfirm: (amount: string) => void;
+  theme: 'junior' | 'teen' | 'senior';
+}) {
+  const [amount, setAmount] = useState('');
+  const isDeposit = type === 'deposit';
+
+  const presets = theme === 'junior' ? ['500', '1000', '2000', '5000']
+    : theme === 'senior' ? ['1000', '5000', '10000', '20000']
+    : ['1000', '3000', '5000', '10000'];
+
+  const accent = theme === 'junior' ? '#C084FC' : theme === 'senior' ? '#0A84FF' : '#6C63FF';
+  const btnColor = isDeposit ? '#4ADE80' : '#FB923C';
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'flex-end' }}
+          >
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={{ backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 28, paddingBottom: Platform.OS === 'ios' ? 44 : 32 }}>
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: '#E0E0E0', alignSelf: 'center', marginBottom: 24 }} />
+
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Sticker icon={isDeposit ? HandCoins : ShoppingBag} color={btnColor} bg={`${btnColor}20`} size={21} tileSize={44} radius={14} />
+                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#1a1a2e' }}>
+                      {isDeposit ? 'Мөнгө нэмэх' : 'Мөнгө авах'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => { onClose(); setAmount(''); }}
+                    style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#F2F2F7', justifyContent: 'center', alignItems: 'center' }}>
+                    <X size={15} color="#8E8E93" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ backgroundColor: `${accent}0D`, borderRadius: 22, padding: 20, alignItems: 'center', marginBottom: 16, borderWidth: 2, borderColor: `${accent}25` }}>
+                  <Text style={{ fontSize: 11, color: '#AEAEB2', fontWeight: '700', letterSpacing: 1, marginBottom: 4 }}>ДҮН (₮)</Text>
+                  <TextInput
+                    style={{ fontSize: 44, fontWeight: '900', color: '#1a1a2e', textAlign: 'center', minWidth: 100 }}
+                    value={amount} onChangeText={setAmount}
+                    keyboardType="number-pad" placeholder="0" placeholderTextColor="#C7C7CC" autoFocus
+                  />
+                </View>
+
+                {type === 'withdraw' && (
+                  <Text style={{ textAlign: 'center', color: '#8E8E93', fontSize: 12, marginBottom: 10, fontWeight: '600' }}>
+                    Хэтэвч: ₮{balance.toLocaleString()}
+                  </Text>
+                )}
+
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
+                  {presets.map(val => (
+                    <TouchableOpacity key={val}
+                      style={{ flex: 1, paddingVertical: 10, borderRadius: 14, backgroundColor: amount === val ? accent : `${accent}15`, alignItems: 'center' }}
+                      onPress={() => setAmount(val)}>
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: amount === val ? '#fff' : accent }}>
+                        ₮{parseInt(val).toLocaleString()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={{ backgroundColor: btnColor, borderRadius: 20, paddingVertical: 18, alignItems: 'center' }}
+                  onPress={() => { onConfirm(amount); setAmount(''); }} activeOpacity={0.85}>
+                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: '900' }}>
+                    {isDeposit ? 'Нэмэх' : 'Авах'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </KeyboardAvoidingView>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
+}
+
+// ─── Root Component ────────────────────────────────────────────────────────
 export default function ChildDashboard() {
   const { state, dispatch, getSelectedChild } = useApp();
   const router = useRouter();
   const child = getSelectedChild();
   const [modalType, setModalType] = useState<'deposit' | 'withdraw' | null>(null);
-  const [amount, setAmount] = useState('');
 
   if (!child) return null;
+
+  const ageGroup = getAgeGroup(child.age);
+  const isJunior = ageGroup === 'junior';
+  const isSenior = ageGroup === 'senior';
 
   const activeLoans = child.loans.filter(l => l.status === 'active');
   const totalDebt = activeLoans.reduce((sum, l) => sum + (l.totalDue - l.paidAmount), 0);
   const pendingTasks = child.tasks.filter(t => t.status === 'pending').length;
   const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
 
-  const handleTransaction = () => {
+  const handleTransaction = (amount: string) => {
     const num = parseInt(amount);
     if (!num || num <= 0) { Alert.alert('Алдаа', 'Зөв дүн оруулна уу'); return; }
     if (modalType === 'withdraw' && num > child.balance) {
-      Alert.alert('Алдаа', 'Хэтэвчинд хүрэлцэхгүй байна');
-      return;
+      Alert.alert('Алдаа', 'Хэтэвчинд хүрэлцэхгүй байна'); return;
     }
-    dispatch({
-      type: modalType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW',
-      childId: child.id,
-      amount: num,
-    });
-    Alert.alert(
-      'Амжилттай',
-      modalType === 'deposit'
-        ? `₮${num.toLocaleString()} цэнэглэгдлээ!`
-        : `₮${num.toLocaleString()} таталт хийгдлээ!`
-    );
-    setAmount('');
+    dispatch({ type: modalType === 'deposit' ? 'DEPOSIT' : 'WITHDRAW', childId: child.id, amount: num });
+    Alert.alert('Амжилттай', modalType === 'deposit' ? `₮${num.toLocaleString()} нэмэгдлээ!` : `₮${num.toLocaleString()} авагдлаа!`);
     setModalType(null);
   };
 
-  return (
-    <SafeAreaView className="flex-1 bg-[#F8F8FC]">
-      {/* Deposit/Withdraw Modal */}
-      <Modal visible={modalType !== null} transparent animationType="fade">
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-          <View className="bg-white rounded-3xl p-6 mx-6 w-[85%] shadow-lg">
-            <View className="flex-row justify-between items-center mb-5">
-              <Text className="text-xl font-black text-[#1a1a2e]">
-                {modalType === 'deposit' ? '💰 Цэнэглэх' : '💸 Таталт хийх'}
-              </Text>
-              <TouchableOpacity onPress={() => { setModalType(null); setAmount(''); }}>
-                <X size={24} color="#AEAEB2" />
-              </TouchableOpacity>
-            </View>
+  // Sticker sets for achievements
+  const STICKERS_JUNIOR = [
+    { icon: Star,    color: '#F59E0B', bg: '#FEF3C7' },
+    { icon: Rocket,  color: '#6366F1', bg: '#EDE9FE' },
+    { icon: Heart,   color: '#EC4899', bg: '#FCE7F3' },
+    { icon: Trophy,  color: '#D97706', bg: '#FEF3C7' },
+    { icon: Gem,     color: '#0EA5E9', bg: '#E0F2FE' },
+    { icon: Medal,   color: '#10B981', bg: '#D1FAE5' },
+    { icon: Crown,   color: '#F59E0B', bg: '#FEF9C3' },
+    { icon: Sparkles,color: '#A855F7', bg: '#F3E8FF' },
+  ];
+  const STICKERS_TEEN = [
+    { icon: Trophy,      color: '#6C63FF', bg: '#EEEEFF' },
+    { icon: Star,        color: '#FF9500', bg: '#FFF4E0' },
+    { icon: Zap,         color: '#34C759', bg: '#E8FFF0' },
+    { icon: Heart,       color: '#FF3B8C', bg: '#FFE8F4' },
+    { icon: Award,       color: '#6C63FF', bg: '#EEEEFF' },
+    { icon: Gem,         color: '#0EA5E9', bg: '#E0F4FF' },
+    { icon: Crown,       color: '#FF9500', bg: '#FFF4E0' },
+    { icon: ShieldCheck, color: '#34C759', bg: '#E8FFF0' },
+  ];
+  const STICKERS_SENIOR = [
+    { icon: BadgeCheck,  color: '#00C896', bg: '#00C89618' },
+    { icon: Trophy,      color: '#0A84FF', bg: '#0A84FF18' },
+    { icon: Award,       color: '#BF5AF2', bg: '#BF5AF218' },
+    { icon: Star,        color: '#FFB800', bg: '#FFB80018' },
+    { icon: Gem,         color: '#00C896', bg: '#00C89618' },
+    { icon: Crown,       color: '#FF9500', bg: '#FF950018' },
+    { icon: ShieldCheck, color: '#0A84FF', bg: '#0A84FF18' },
+    { icon: Sparkles,    color: '#BF5AF2', bg: '#BF5AF218' },
+  ];
 
-            <Text className="text-sm font-semibold text-[#8E8E93] mb-2">Дүн (₮)</Text>
-            <TextInput
-              className="bg-[#F8F8FC] rounded-2xl p-4 text-lg text-[#1a1a2e] mb-2 border border-[#F2F2F7] font-bold text-center"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="number-pad"
-              placeholder="0"
-              placeholderTextColor="#C7C7CC"
-              autoFocus
-            />
-            {modalType === 'withdraw' && (
-              <Text className="text-xs text-[#AEAEB2] text-center mb-3">
-                Хэтэвч: ₮{child.balance.toLocaleString()}
-              </Text>
-            )}
+  // ═══════════════════════════════════════════════════════════
+  // JUNIOR (6–9) — Sticker world: pastel, bubbly, big tiles
+  // ═══════════════════════════════════════════════════════════
+  const insets = useSafeAreaInsets();
 
-            <View className="flex-row gap-2 mb-4">
-              {['1000', '3000', '5000', '10000'].map(val => (
-                <TouchableOpacity
-                  key={val}
-                  className="flex-1 py-2.5 rounded-2xl bg-[#6C63FF]/10 items-center"
-                  onPress={() => setAmount(val)}
-                >
-                  <Text className="text-xs font-bold text-[#6C63FF]">₮{parseInt(val).toLocaleString()}</Text>
+  if (isJunior) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FDF4FF' }}>
+        <TransactionModal visible={modalType !== null} type={modalType} balance={child.balance}
+          onClose={() => setModalType(null)} onConfirm={handleTransaction} theme="junior" />
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 52 + insets.bottom }}>
+
+          {/* Purple sky header */}
+          <View style={{
+            backgroundColor: '#C084FC', 
+            paddingTop: insets.top + 8, 
+            paddingBottom: 32,
+            paddingHorizontal: 20, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, overflow: 'hidden',
+          }}>
+            <View style={{ position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: '#A855F730', top: -60, right: -30 }} />
+            <View style={{ position: 'absolute', width: 90, height: 90, borderRadius: 45, backgroundColor: '#E879F925', bottom: 0, left: 15 }} />
+
+            {/* Top bar */}
+            <Animated.View entering={FadeInDown.duration(400)}
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{
+                  width: 56, height: 56, borderRadius: 20, backgroundColor: '#fff',
+                  justifyContent: 'center', alignItems: 'center',
+                  shadowColor: '#7C3AED', shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 },
+                  borderWidth: 3, borderColor: '#F0ABFC',
+                }}>
+                  <AvatarIcon size={26} color="#C084FC" />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 12, color: '#F0ABFC', fontWeight: '700' }}>Сайн уу!</Text>
+                  <Text style={{ fontSize: 24, color: '#fff', fontWeight: '900' }}>{child.name}</Text>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                {/* Flame sticker */}
+                <View style={{ backgroundColor: '#A855F7', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                  <Flame size={16} color="#FFD93D" fill="#FFD93D" />
+                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>{child.streak}</Text>
+                </View>
+                <TouchableOpacity onPress={() => { dispatch({ type: 'LOGOUT' }); router.replace('/'); }}
+                  style={{ width: 38, height: 38, borderRadius: 14, backgroundColor: '#A855F7', justifyContent: 'center', alignItems: 'center' }}>
+                  <LogOut size={16} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+
+            {/* Balance card with PiggyBank sticker */}
+            <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{
+              marginTop: 20, backgroundColor: '#fff', borderRadius: 32, padding: 24, alignItems: 'center',
+              shadowColor: '#9333EA', shadowOpacity: 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
+            }}>
+              <Sticker icon={PiggyBank} color="#EC4899" bg="#FCE7F3" size={34} tileSize={66} radius={22} />
+              <Text style={{ fontSize: 11, color: '#A855F7', fontWeight: '800', marginTop: 12, letterSpacing: 1.2, textTransform: 'uppercase' }}>Миний хэтэвч</Text>
+              <Text style={{ fontSize: 46, fontWeight: '900', color: '#1a1a2e', letterSpacing: -2, marginTop: 4 }}>
+                ₮{child.balance.toLocaleString()}
+              </Text>
+              {/* Star sticker row for credit */}
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 12 }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <View key={i} style={{
+                    width: 32, height: 32, borderRadius: 10,
+                    backgroundColor: i <= child.creditScore ? '#FEF3C7' : '#F5F5F5',
+                    justifyContent: 'center', alignItems: 'center',
+                  }}>
+                    <Star size={17} color={i <= child.creditScore ? '#F59E0B' : '#D1D1D6'} fill={i <= child.creditScore ? '#F59E0B' : 'none'} />
+                  </View>
+                ))}
+              </View>
+              <Text style={{ fontSize: 11, color: '#C084FC', fontWeight: '700', marginTop: 6 }}>Итгэлцэлийн одууд</Text>
+            </Animated.View>
+          </View>
+
+          {/* Big sticker action buttons */}
+          <Animated.View entering={FadeInDown.duration(500).delay(150)}
+            style={{ flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 16 }}>
+            <TouchableOpacity
+              style={{
+                flex: 1, backgroundColor: '#4ADE80', borderRadius: 28, paddingVertical: 22,
+                alignItems: 'center', gap: 8,
+                shadowColor: '#16A34A', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
+              }}
+              onPress={() => setModalType('deposit')} activeOpacity={0.82}>
+              <Sticker icon={HandCoins} color="#fff" bg="rgba(255,255,255,0.3)" size={24} tileSize={50} radius={18} shadow={false} />
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#fff' }}>Нэмэх</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1, backgroundColor: '#FB923C', borderRadius: 28, paddingVertical: 22,
+                alignItems: 'center', gap: 8,
+                shadowColor: '#EA580C', shadowOpacity: 0.28, shadowRadius: 14, shadowOffset: { width: 0, height: 5 },
+              }}
+              onPress={() => setModalType('withdraw')} activeOpacity={0.82}>
+              <Sticker icon={ShoppingBag} color="#fff" bg="rgba(255,255,255,0.3)" size={24} tileSize={50} radius={18} shadow={false} />
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#fff' }}>Авах</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* Adventure sticker cards */}
+          <Animated.View entering={FadeInDown.duration(500).delay(200)} style={{ paddingHorizontal: 20, marginTop: 26 }}>
+            <Text style={{ fontSize: 18, fontWeight: '900', color: '#1a1a2e', marginBottom: 14 }}>Юу хийх вэ?</Text>
+            <View style={{ gap: 10 }}>
+              {[
+                { icon: CheckSquare, iColor: '#059669', iBg: '#D1FAE5', bColor: '#6EE7B7', cardBg: '#F0FFF8', label: 'Даалгавар', sub: `${pendingTasks} хүлээж байна`, route: '/child/tasks' },
+                { icon: GraduationCap, iColor: '#D97706', iBg: '#FEF3C7', bColor: '#FCD34D', cardBg: '#FFFBEB', label: 'Хичээл', sub: `${child.lessonsCompleted.length}/6 хийсэн`, route: '/child/learn' },
+                { icon: Banknote, iColor: '#7C3AED', iBg: '#EDE9FE', bColor: '#C4B5FD', cardBg: '#F5F3FF', label: 'Зээл', sub: `${activeLoans.length} идэвхтэй`, route: '/child/loans' },
+              ].map(item => (
+                <TouchableOpacity key={item.label}
+                  style={{
+                    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                    backgroundColor: item.cardBg, borderRadius: 24, paddingVertical: 16, paddingHorizontal: 16,
+                    borderWidth: 2, borderColor: item.bColor,
+                  }}
+                  onPress={() => router.push(item.route as any)} activeOpacity={0.8}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                    <Sticker icon={item.icon} color={item.iColor} bg={item.iBg} size={24} tileSize={54} radius={18} />
+                    <View>
+                      <Text style={{ fontSize: 16, fontWeight: '900', color: '#1a1a2e' }}>{item.label}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: item.iColor, marginTop: 2 }}>{item.sub}</Text>
+                    </View>
+                  </View>
+                  <View style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: item.iBg, justifyContent: 'center', alignItems: 'center' }}>
+                    <ChevronRight size={18} color={item.iColor} />
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
+          </Animated.View>
 
-            <TouchableOpacity
-              className={`rounded-2xl py-4 items-center ${modalType === 'deposit' ? 'bg-[#34C759]' : 'bg-[#FF9500]'}`}
-              onPress={handleTransaction}
-              activeOpacity={0.7}
-            >
-              <Text className="text-white text-base font-bold">
-                {modalType === 'deposit' ? 'Цэнэглэх' : 'Таталт хийх'}
+          {/* Sticker badge shelf */}
+          <Animated.View entering={FadeInDown.duration(500).delay(280)} style={{ marginTop: 28, paddingHorizontal: 20 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#1a1a2e' }}>Миний стикерүүд</Text>
+              <View style={{ backgroundColor: '#F3E8FF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: '#A855F7' }}>{child.achievements.length}/{achievementsData.length}</Text>
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}
+              style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
+              {achievementsData.slice(0, 8).map((ach, i) => {
+                const unlocked = child.achievements.some(a => a.id === ach.id);
+                const s = STICKERS_JUNIOR[i % STICKERS_JUNIOR.length];
+                return (
+                  <Animated.View key={ach.id} entering={ZoomIn.duration(360).delay(i * 60)}>
+                    <View style={{
+                      width: 84, alignItems: 'center', gap: 8, padding: 14, borderRadius: 24,
+                      backgroundColor: unlocked ? '#fff' : '#F5F5F5',
+                      borderWidth: 2, borderColor: unlocked ? s.bg : '#EBEBEB',
+                      shadowColor: unlocked ? s.color : 'transparent',
+                      shadowOpacity: 0.16, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+                      opacity: unlocked ? 1 : 0.42,
+                    }}>
+                      <Sticker icon={unlocked ? s.icon : Lock} color={unlocked ? s.color : '#AEAEB2'} bg={unlocked ? s.bg : '#EBEBEB'} size={22} tileSize={44} radius={14} shadow={false} />
+                      <Text style={{ fontSize: 9, fontWeight: '800', textAlign: 'center', color: unlocked ? '#1a1a2e' : '#AEAEB2' }} numberOfLines={2}>
+                        {ach.title}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                );
+              })}
+            </ScrollView>
+          </Animated.View>
+
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SENIOR (15–18) — Dark fintech, stickers as data icons
+  // ═══════════════════════════════════════════════════════════
+  if (isSenior) {
+    const paidLoans = child.loans.filter(l => l.status === 'paid').length;
+    const repaymentRate = child.loans.length > 0 ? Math.round((paidLoans / child.loans.length) * 100) : 0;
+    const scoreColor = child.creditScore >= 4 ? '#00C896' : child.creditScore >= 3 ? '#FFB800' : '#FF4D4D';
+    const scoreLabel = child.creditScore >= 4 ? 'МАШ САЙН' : child.creditScore >= 3 ? 'ДУНДАЖ' : 'ХӨГЖҮҮЛЭХ';
+
+    const navItems = [
+      { icon: CheckSquare,      label: 'Даалгавар',              sub: `${pendingTasks} хүлээж буй`,    route: '/child/tasks',  color: '#00C896' },
+      { icon: CircleDollarSign, label: 'Зээл удирдах',           sub: `${activeLoans.length} идэвхтэй`, route: '/child/loans',  color: '#0A84FF' },
+      { icon: BrainCircuit,     label: 'Санхүүгийн боловсрол',   sub: `${child.lessonsCompleted.length}/6 хичээл`, route: '/child/learn', color: '#BF5AF2' },
+    ];
+
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0D0D16' }}>
+        <TransactionModal visible={modalType !== null} type={modalType} balance={child.balance}
+          onClose={() => setModalType(null)} onConfirm={handleTransaction} theme="senior" />
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 52 + insets.bottom }}>
+
+          {/* Header */}
+          <Animated.View entering={FadeInDown.duration(400)}
+            style={{ paddingHorizontal: 20, paddingTop: insets.top + 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Sticker icon={AvatarIcon} color="#0A84FF" bg="#14142B" size={22} tileSize={46} radius={15} />
+              <View>
+                <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' }}>Санхүүгийн аккаунт</Text>
+                <Text style={{ fontSize: 18, color: '#FFFFFF', fontWeight: '900' }}>{child.name}</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <View style={{ backgroundColor: '#14142B', borderRadius: 13, paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', gap: 5, alignItems: 'center', borderWidth: 1, borderColor: '#0A84FF25' }}>
+                <Flame size={14} color="#0A84FF" />
+                <Text style={{ color: '#0A84FF', fontWeight: '700', fontSize: 13 }}>{child.streak}д</Text>
+              </View>
+              <TouchableOpacity onPress={() => { dispatch({ type: 'LOGOUT' }); router.replace('/'); }}
+                style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: '#14142B', justifyContent: 'center', alignItems: 'center' }}>
+                <LogOut size={15} color="#4A4A6A" />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Glass balance card */}
+          <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{ marginHorizontal: 20, marginTop: 16 }}>
+            <View style={{
+              backgroundColor: '#14142B', borderRadius: 30, padding: 24,
+              borderWidth: 1, borderColor: '#0A84FF20',
+              shadowColor: '#0A84FF', shadowOpacity: 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 8 },
+            }}>
+              <View style={{ position: 'absolute', top: 22, right: 22, width: 8, height: 8, borderRadius: 4, backgroundColor: '#00C896' }} />
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <Sticker icon={Wallet} color="#0A84FF" bg="#0A84FF18" size={17} tileSize={34} radius={11} />
+                <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' }}>Нийт үлдэгдэл</Text>
+              </View>
+              <Text style={{ fontSize: 42, fontWeight: '900', color: '#fff', letterSpacing: -1 }}>
+                ₮{child.balance.toLocaleString()}
               </Text>
-            </TouchableOpacity>
-          </View>
+              {totalDebt > 0 && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 18 }}>
+                  <TrendingDown size={12} color="#FF4D4D" />
+                  <Text style={{ fontSize: 12, color: '#FF4D4D', fontWeight: '600' }}>Нийт өр: ₮{totalDebt.toLocaleString()}</Text>
+                </View>
+              )}
+              {totalDebt === 0 && <View style={{ height: 18 }} />}
+
+              {/* Metric sticker row */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {[
+                  { icon: BadgeCheck,   label: 'КРЕДИТ', value: `${child.creditScore}/5`, sub: scoreLabel, color: scoreColor },
+                  { icon: ReceiptText,  label: 'ТӨЛБӨР', value: `${repaymentRate}%`,      sub: 'Буцааж төлсөн', color: '#0A84FF' },
+                  { icon: BookOpen,     label: 'ХИЧЭЭЛ', value: `${child.lessonsCompleted.length}/6`, sub: 'Дууссан', color: '#BF5AF2' },
+                ].map(m => (
+                  <View key={m.label} style={{ flex: 1, backgroundColor: '#0D0D1E', borderRadius: 18, padding: 12, borderWidth: 1, borderColor: '#1E1E30' }}>
+                    <Sticker icon={m.icon} color={m.color} bg={`${m.color}18`} size={14} tileSize={30} radius={9} shadow={false} />
+                    <Text style={{ fontSize: 8, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 8 }}>{m.label}</Text>
+                    <Text style={{ fontSize: 20, fontWeight: '900', color: m.color, marginTop: 2 }}>{m.value}</Text>
+                    <Text style={{ fontSize: 9, color: '#4A4A6A', fontWeight: '600', marginTop: 1 }}>{m.sub}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+              <TouchableOpacity style={{ flex: 1, backgroundColor: '#00C896', borderRadius: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                onPress={() => setModalType('deposit')} activeOpacity={0.85}>
+                <ArrowDownToLine size={17} color="#fff" />
+                <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Цэнэглэх</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flex: 1, backgroundColor: '#1E1E30', borderRadius: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2E2E4A' }}
+                onPress={() => setModalType('withdraw')} activeOpacity={0.85}>
+                <ArrowUpFromLine size={17} color="#AEAEB2" />
+                <Text style={{ color: '#AEAEB2', fontWeight: '800', fontSize: 14 }}>Таталт</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Financial insight */}
+          <Animated.View entering={FadeInDown.duration(500).delay(180)} style={{ marginHorizontal: 20, marginTop: 20 }}>
+            <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 12 }}>Санхүүгийн тойм</Text>
+            <View style={{ backgroundColor: '#14142B', borderRadius: 26, padding: 20, borderWidth: 1, borderColor: '#1E1E30', gap: 18 }}>
+              {[
+                { label: 'Кредит скорын явц', pct: (child.creditScore / 5) * 100, color: scoreColor, right: scoreLabel },
+                { label: 'Зээл буцаасан харьцаа', pct: repaymentRate, color: '#0A84FF', right: `${repaymentRate}%` },
+              ].map(bar => (
+                <View key={bar.label}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ fontSize: 13, color: '#AEAEB2', fontWeight: '600' }}>{bar.label}</Text>
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: bar.color }}>{bar.right}</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#0D0D1E', borderRadius: 8, height: 8, overflow: 'hidden' }}>
+                    <View style={{ width: `${bar.pct}%`, backgroundColor: bar.color, height: '100%', borderRadius: 8 }} />
+                  </View>
+                </View>
+              ))}
+              {/* Lightbulb sticker tip */}
+              <View style={{ backgroundColor: '#0A84FF0D', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#0A84FF20', flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
+                <Sticker icon={Lightbulb} color="#0A84FF" bg="#0A84FF25" size={17} tileSize={36} radius={12} shadow={false} />
+                <Text style={{ flex: 1, fontSize: 12, color: '#7A7A9A', lineHeight: 19, fontWeight: '500' }}>
+                  {child.creditScore >= 4 ? 'Маш сайн кредит скор! Зээлийн хүү хамгийн бага байна.'
+                    : child.creditScore >= 3 ? 'Дараагийн 2 зээлийг хугацаанд нь төлж скороо нэмэгдүүл.'
+                    : 'Жижиг зээл авч цагтаа бүрэн төл — скор сайжрах болно.'}
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Nav list */}
+          <Animated.View entering={FadeInDown.duration(500).delay(250)} style={{ marginHorizontal: 20, marginTop: 20 }}>
+            <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 12 }}>Хурдан үйлдэл</Text>
+            <View style={{ backgroundColor: '#14142B', borderRadius: 26, overflow: 'hidden', borderWidth: 1, borderColor: '#1E1E30' }}>
+              {navItems.map((item, i) => (
+                <TouchableOpacity key={item.label}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 18, borderBottomWidth: i < navItems.length - 1 ? 1 : 0, borderBottomColor: '#1E1E30' }}
+                  onPress={() => router.push(item.route as any)} activeOpacity={0.7}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                    <Sticker icon={item.icon} color={item.color} bg={`${item.color}18`} size={18} tileSize={42} radius={14} shadow={false} />
+                    <View>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#E0E0FF' }}>{item.label}</Text>
+                      <Text style={{ fontSize: 11, color: '#4A4A6A', fontWeight: '500', marginTop: 2 }}>{item.sub}</Text>
+                    </View>
+                  </View>
+                  <ChevronRight size={16} color="#2E2E4A" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+
+          {/* Achievements */}
+          <Animated.View entering={FadeInDown.duration(500).delay(320)} style={{ marginTop: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginBottom: 12 }}>
+              <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' }}>Амжилтууд</Text>
+              <Text style={{ fontSize: 11, color: '#4A4A6A', fontWeight: '600' }}>{child.achievements.length}/{achievementsData.length}</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
+              {achievementsData.slice(0, 8).map((ach, i) => {
+                const unlocked = child.achievements.some(a => a.id === ach.id);
+                const s = STICKERS_SENIOR[i % STICKERS_SENIOR.length];
+                return (
+                  <Animated.View key={ach.id} entering={FadeInRight.duration(350).delay(i * 50)}>
+                    <View style={{
+                      width: 80, alignItems: 'center', gap: 8, padding: 14, borderRadius: 20,
+                      backgroundColor: '#14142B', borderWidth: 1,
+                      borderColor: unlocked ? s.bg : '#1E1E30', opacity: unlocked ? 1 : 0.38,
+                    }}>
+                      <Sticker icon={unlocked ? s.icon : Lock} color={unlocked ? s.color : '#2E2E4A'} bg={unlocked ? s.bg : '#1E1E30'} size={19} tileSize={40} radius={13} shadow={false} />
+                      <Text style={{ fontSize: 9, fontWeight: '700', textAlign: 'center', color: unlocked ? '#AEAEB2' : '#2E2E4A' }} numberOfLines={2}>
+                        {ach.title}
+                      </Text>
+                    </View>
+                  </Animated.View>
+                );
+              })}
+            </ScrollView>
+          </Animated.View>
+
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TEEN (10–14) — Bold gradients, stickers as expressive accents
+  // ═══════════════════════════════════════════════════════════
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F0F0FB' }}>
+      <TransactionModal visible={modalType !== null} type={modalType} balance={child.balance}
+        onClose={() => setModalType(null)} onConfirm={handleTransaction} theme="teen" />
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 44 + insets.bottom }}>
+
+        {/* Gradient hero */}
+        <View style={{ backgroundColor: '#6C63FF', paddingTop: insets.top + 8, paddingBottom: 36, borderBottomLeftRadius: 44, borderBottomRightRadius: 44, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: '#5A52EE', top: -70, right: -40 }} />
+          <View style={{ position: 'absolute', width: 110, height: 110, borderRadius: 55, backgroundColor: '#8B85FF28', bottom: -10, left: 20 }} />
+
+          <Animated.View entering={FadeInDown.duration(400)}
+            style={{ paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)' }}>
+                <AvatarIcon size={24} color="#fff" />
+              </View>
+              <View>
+                <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>Сайн байна уу!</Text>
+                <Text style={{ fontSize: 22, color: '#fff', fontWeight: '900' }}>{child.name}</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <View style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', gap: 5, alignItems: 'center' }}>
+                <Flame size={14} color="#FFD93D" fill="#FFD93D" />
+                <Text style={{ color: '#FFD93D', fontWeight: '900', fontSize: 14 }}>{child.streak}</Text>
+              </View>
+              <TouchableOpacity onPress={() => { dispatch({ type: 'LOGOUT' }); router.replace('/'); }}
+                style={{ width: 38, height: 38, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }}>
+                <LogOut size={15} color="rgba(255,255,255,0.75)" />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Floating balance card */}
+          <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{ marginHorizontal: 20, marginTop: 20 }}>
+            <View style={{ backgroundColor: 'rgba(255,255,255,0.13)', borderRadius: 30, padding: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <Sticker icon={Wallet} color="#fff" bg="rgba(255,255,255,0.2)" size={14} tileSize={28} radius={9} shadow={false} />
+                <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Миний хэтэвч</Text>
+              </View>
+              <Text style={{ fontSize: 40, fontWeight: '900', color: '#fff', letterSpacing: -1 }}>
+                ₮{child.balance.toLocaleString()}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Sticker icon={TrendingDown} color="#FF6B6B" bg="rgba(255,107,107,0.22)" size={13} tileSize={28} radius={9} shadow={false} />
+                  <View>
+                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Нийт өр</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>₮{totalDebt.toLocaleString()}</Text>
+                  </View>
+                </View>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.18)', borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Sticker icon={Star} color="#FFD93D" bg="rgba(255,217,61,0.22)" size={13} tileSize={28} radius={9} shadow={false} />
+                  <View>
+                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Итгэлцэл</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>{child.creditScore}/5</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
         </View>
-      </Modal>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* Header */}
-        <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-3">
-            <View className="w-12 h-12 rounded-2xl bg-[#6C63FF] justify-center items-center">
-              <AvatarIcon size={24} color="#fff" />
-            </View>
-            <View>
-              <Text className="text-sm text-[#AEAEB2]">Сайн байна уу!</Text>
-              <Text className="text-xl font-black text-[#1a1a2e]">{child.name}</Text>
-            </View>
-          </View>
-          <View className="flex-row items-center gap-2">
-            <View className="flex-row items-center bg-[#FF9500]/10 px-3 py-2 rounded-2xl gap-1">
-              <Flame size={16} color="#FF9500" />
-              <Text className="text-sm font-bold text-[#FF9500]">{child.streak}</Text>
-            </View>
-            <TouchableOpacity
-              className="w-10 h-10 rounded-2xl bg-[#F2F2F7] justify-center items-center"
-              onPress={() => { dispatch({ type: 'LOGOUT' }); router.replace('/'); }}
-            >
-              <LogOut size={16} color="#AEAEB2" />
-            </TouchableOpacity>
-          </View>
+        {/* Transaction buttons */}
+        <Animated.View entering={FadeInDown.duration(500).delay(150)}
+          style={{ flexDirection: 'row', gap: 12, marginHorizontal: 20, marginTop: 16 }}>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: '#34C759', borderRadius: 22, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, shadowColor: '#34C759', shadowOpacity: 0.38, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}
+            onPress={() => setModalType('deposit')} activeOpacity={0.82}>
+            <Sticker icon={ArrowDownToLine} color="#fff" bg="rgba(255,255,255,0.25)" size={16} tileSize={30} radius={10} shadow={false} />
+            <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Цэнэглэх</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: '#FF9500', borderRadius: 22, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, shadowColor: '#FF9500', shadowOpacity: 0.38, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } }}
+            onPress={() => setModalType('withdraw')} activeOpacity={0.82}>
+            <Sticker icon={ArrowUpFromLine} color="#fff" bg="rgba(255,255,255,0.25)" size={16} tileSize={30} radius={10} shadow={false} />
+            <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Таталт</Text>
+          </TouchableOpacity>
         </Animated.View>
 
-        {/* Wallet Card */}
-        <Animated.View entering={FadeInDown.duration(600).delay(100)} className="px-6 mt-3">
-          <View className="bg-[#6C63FF] rounded-3xl p-6 shadow-lg overflow-hidden relative">
-            <View className="absolute w-40 h-40 rounded-full bg-white/5 -top-10 -right-10" />
-            <View className="absolute w-24 h-24 rounded-full bg-white/5 bottom-0 left-4" />
-            <View className="flex-row items-center gap-2 mb-1">
-              <Wallet size={16} color="#fff" />
-              <Text className="text-sm font-semibold text-white/70">Миний хэтэвч</Text>
-            </View>
-            <Text className="text-4xl font-black text-white mb-4">₮{child.balance.toLocaleString()}</Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1 bg-white/10 rounded-2xl p-3 flex-row items-center gap-2">
-                <TrendingDown size={16} color="#FF6B6B" />
-                <View>
-                  <Text className="text-2xs text-white/50">Нийт өр</Text>
-                  <Text className="text-sm font-bold text-white">₮{totalDebt.toLocaleString()}</Text>
-                </View>
-              </View>
-              <View className="flex-1 bg-white/10 rounded-2xl p-3 flex-row items-center gap-2">
-                <Star size={16} color="#FFD93D" fill="#FFD93D" />
-                <View>
-                  <Text className="text-2xs text-white/50">Итгэлцэл</Text>
-                  <Text className="text-sm font-bold text-white">{child.creditScore}/5</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Deposit / Withdraw Buttons */}
-          <View className="flex-row gap-3 mt-3">
-            <TouchableOpacity
-              className="flex-1 bg-[#34C759] rounded-2xl py-3.5 flex-row items-center justify-center gap-2"
-              onPress={() => setModalType('deposit')}
-              activeOpacity={0.7}
-            >
-              <ArrowDownToLine size={18} color="#fff" />
-              <Text className="text-white font-bold text-sm">Цэнэглэх</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 bg-[#FF9500] rounded-2xl py-3.5 flex-row items-center justify-center gap-2"
-              onPress={() => setModalType('withdraw')}
-              activeOpacity={0.7}
-            >
-              <ArrowUpFromLine size={18} color="#fff" />
-              <Text className="text-white font-bold text-sm">Таталт</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Quick Actions */}
-        <Animated.View entering={FadeInDown.duration(600).delay(200)} className="px-6 mt-6">
-          <Text className="text-base font-bold text-[#1a1a2e] mb-3">Хурдан үйлдэл</Text>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="flex-1 bg-white rounded-3xl p-4 items-center border border-[#F2F2F7] shadow-sm"
-              onPress={() => router.push('/child/tasks' as any)}
-              activeOpacity={0.7}
-            >
-              <View className="w-12 h-12 rounded-2xl bg-[#34C759]/10 justify-center items-center mb-2">
-                <CheckSquare size={22} color="#34C759" />
-              </View>
-              <Text className="text-sm font-bold text-[#1a1a2e]">Даалгавар</Text>
-              <Text className="text-xs text-[#AEAEB2]">{pendingTasks} хүлээж буй</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 bg-white rounded-3xl p-4 items-center border border-[#F2F2F7] shadow-sm"
-              onPress={() => router.push('/child/loans' as any)}
-              activeOpacity={0.7}
-            >
-              <View className="w-12 h-12 rounded-2xl bg-[#6C63FF]/10 justify-center items-center mb-2">
-                <Wallet size={22} color="#6C63FF" />
-              </View>
-              <Text className="text-sm font-bold text-[#1a1a2e]">Зээл</Text>
-              <Text className="text-xs text-[#AEAEB2]">{activeLoans.length} идэвхтэй</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 bg-white rounded-3xl p-4 items-center border border-[#F2F2F7] shadow-sm"
-              onPress={() => router.push('/child/learn' as any)}
-              activeOpacity={0.7}
-            >
-              <View className="w-12 h-12 rounded-2xl bg-[#FF9500]/10 justify-center items-center mb-2">
-                <BookOpen size={22} color="#FF9500" />
-              </View>
-              <Text className="text-sm font-bold text-[#1a1a2e]">Сурах</Text>
-              <Text className="text-xs text-[#AEAEB2]">{child.lessonsCompleted.length}/6</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Achievements */}
-        <Animated.View entering={FadeInDown.duration(600).delay(300)} className="mt-6">
-          <View className="px-6 flex-row justify-between items-center mb-3">
-            <Text className="text-base font-bold text-[#1a1a2e]">Амжилтууд</Text>
-            <Text className="text-xs text-[#AEAEB2]">{child.achievements.length}/{achievementsData.length}</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24 }}>
-            {achievementsData.slice(0, 6).map((ach, i) => (
-              <Animated.View key={ach.id} entering={FadeInRight.duration(400).delay(i * 80)}>
-                <AchievementBadge
-                  title={ach.title}
-                  isUnlocked={child.achievements.some(a => a.id === ach.id)}
-                />
-              </Animated.View>
+        {/* Quick action grid */}
+        <Animated.View entering={FadeInDown.duration(500).delay(200)} style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <Text style={{ fontSize: 15, fontWeight: '900', color: '#1a1a2e', marginBottom: 14 }}>Хурдан үйлдэл</Text>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            {[
+              { icon: CheckSquare,      color: '#34C759', bg: '#E8FFF0', border: '#34C75920', label: 'Даалгавар', sub: `${pendingTasks} хүлээж буй`, route: '/child/tasks' },
+              { icon: CircleDollarSign, color: '#6C63FF', bg: '#EEEEFF', border: '#6C63FF20', label: 'Зээл',      sub: `${activeLoans.length} идэвхтэй`, route: '/child/loans' },
+              { icon: BookOpen,         color: '#FF9500', bg: '#FFF4E0', border: '#FF950020', label: 'Сурах',     sub: `${child.lessonsCompleted.length}/6`, route: '/child/learn' },
+            ].map(item => (
+              <TouchableOpacity key={item.label}
+                style={{ flex: 1, backgroundColor: '#fff', borderRadius: 24, paddingVertical: 20, alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: item.border }}
+                onPress={() => router.push(item.route as any)} activeOpacity={0.8}>
+                <Sticker icon={item.icon} color={item.color} bg={item.bg} size={22} tileSize={48} radius={16} />
+                <Text style={{ fontSize: 12, fontWeight: '900', color: '#1a1a2e' }}>{item.label}</Text>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: item.color }}>{item.sub}</Text>
+              </TouchableOpacity>
             ))}
+          </View>
+        </Animated.View>
+
+        {/* Progress bar */}
+        <Animated.View entering={FadeInDown.duration(500).delay(250)} style={{ marginHorizontal: 20, marginTop: 20 }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 26, padding: 20, borderWidth: 1, borderColor: '#EBEBF5' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <Sticker icon={Zap} color="#6C63FF" bg="#EEEEFF" size={15} tileSize={32} radius={10} />
+                <Text style={{ fontSize: 14, fontWeight: '900', color: '#1a1a2e' }}>Хичээлийн явц</Text>
+              </View>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#6C63FF' }}>{child.lessonsCompleted.length}/6</Text>
+            </View>
+            <View style={{ backgroundColor: '#F0F0FB', borderRadius: 10, height: 12, overflow: 'hidden', marginBottom: 10 }}>
+              <View style={{ width: `${(child.lessonsCompleted.length / 6) * 100}%`, backgroundColor: '#6C63FF', height: '100%', borderRadius: 10 }} />
+            </View>
+            <Text style={{ fontSize: 11, color: '#AEAEB2', fontWeight: '600' }}>
+              {6 - child.lessonsCompleted.length > 0
+                ? `${6 - child.lessonsCompleted.length} хичээл үлдсэн байна`
+                : 'Бүх хичээлийг дуусгасан!'}
+            </Text>
+          </View>
+        </Animated.View>
+
+        {/* Sticker achievements */}
+        <Animated.View entering={FadeInDown.duration(500).delay(300)} style={{ marginTop: 22 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 20, marginBottom: 14 }}>
+            <Text style={{ fontSize: 15, fontWeight: '900', color: '#1a1a2e' }}>Амжилтууд</Text>
+            <View style={{ backgroundColor: '#EEEEFF', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 }}>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#6C63FF' }}>{child.achievements.length}/{achievementsData.length}</Text>
+            </View>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
+            {achievementsData.slice(0, 8).map((ach, i) => {
+              const unlocked = child.achievements.some(a => a.id === ach.id);
+              const s = STICKERS_TEEN[i % STICKERS_TEEN.length];
+              return (
+                <Animated.View key={ach.id} entering={FadeInRight.duration(360).delay(i * 60)}>
+                  <View style={{
+                    width: 80, alignItems: 'center', gap: 8, padding: 14, borderRadius: 22,
+                    backgroundColor: unlocked ? '#fff' : '#F5F5F5',
+                    borderWidth: 1.5, borderColor: unlocked ? s.bg : '#EBEBEB',
+                    shadowColor: unlocked ? s.color : 'transparent',
+                    shadowOpacity: 0.16, shadowRadius: 8, shadowOffset: { width: 0, height: 3 },
+                    opacity: unlocked ? 1 : 0.42,
+                  }}>
+                    <Sticker icon={unlocked ? s.icon : Lock} color={unlocked ? s.color : '#AEAEB2'} bg={unlocked ? s.bg : '#EBEBEB'} size={20} tileSize={42} radius={14} shadow={false} />
+                    <Text style={{ fontSize: 9, fontWeight: '800', textAlign: 'center', color: unlocked ? s.color : '#AEAEB2' }} numberOfLines={2}>
+                      {ach.title}
+                    </Text>
+                  </View>
+                </Animated.View>
+              );
+            })}
           </ScrollView>
         </Animated.View>
+
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

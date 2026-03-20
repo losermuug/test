@@ -40,6 +40,7 @@ export default function LoginScreen() {
   const [regPin, setRegPin] = useState('');
   const [regRole, setRegRole] = useState<'parent' | 'child'>('child');
   const [regAvatar, setRegAvatar] = useState('rocket');
+  const [regAge, setRegAge] = useState('');
 
   const handleLogin = () => {
     const user = state.users.find(u => u.id === selectedUser);
@@ -64,12 +65,20 @@ export default function LoginScreen() {
       setError('Нэр болон 4 оронтой PIN оруулна уу');
       return;
     }
+    if (regRole === 'child') {
+      const age = parseInt(regAge);
+      if (!age || age < 6 || age > 18) {
+        setError('6-18 насны хооронд оруулна уу');
+        return;
+      }
+    }
     dispatch({
       type: 'REGISTER',
       name: regName.trim(),
       pin: regPin,
       role: regRole,
       avatar: regAvatar,
+      age: regRole === 'child' ? parseInt(regAge) : undefined,
     });
     // After register, navigate
     if (regRole === 'child') {
@@ -338,6 +347,22 @@ export default function LoginScreen() {
                   placeholderTextColor="#ffffff40"
                 />
               </View>
+
+              {/* Age (only for child) */}
+              {regRole === 'child' && (
+                <View>
+                  <Text className="text-white/70 text-sm font-semibold mb-2">Нас (6-18)</Text>
+                  <TextInput
+                    className="bg-white/10 rounded-2xl p-4 text-white text-base border border-white/10 text-center"
+                    value={regAge}
+                    onChangeText={t => setRegAge(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                    keyboardType="number-pad"
+                    maxLength={2}
+                    placeholder="10"
+                    placeholderTextColor="#ffffff40"
+                  />
+                </View>
+              )}
 
               {/* PIN */}
               <View>

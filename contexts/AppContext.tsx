@@ -19,6 +19,7 @@ export interface User {
   pin: string;
   role: Role;
   avatar: string;
+  age?: number;
 }
 
 export interface Loan {
@@ -62,6 +63,7 @@ export interface UnlockedAchievement {
 export interface Child {
   id: string;
   name: string;
+  age: number;
   avatar: string;
   balance: number;
   savings: number;
@@ -74,6 +76,14 @@ export interface Child {
   lastActiveDate: string;
   creditScore: number;
 }
+
+type AgeGroup = 'junior' | 'teen' | 'senior';
+
+const getAgeGroup = (age: number): AgeGroup => {
+  if (age <= 9) return 'junior';
+  if (age <= 14) return 'teen';
+  return 'senior';
+};
 
 export interface AppState {
   currentUser: User | null;
@@ -89,10 +99,10 @@ export interface AppState {
 type Action =
   | { type: 'LOGIN'; user: User }
   | { type: 'LOGOUT' }
-  | { type: 'REGISTER'; name: string; pin: string; role: Role; avatar: string }
+  | { type: 'REGISTER'; name: string; pin: string; role: Role; avatar: string; age?: number }
   | { type: 'SET_ROLE'; role: Role }
   | { type: 'SELECT_CHILD'; childId: string }
-  | { type: 'ADD_CHILD'; name: string; avatar: string }
+  | { type: 'ADD_CHILD'; name: string; avatar: string; age: number }
   | { type: 'DEPOSIT'; childId: string; amount: number }
   | { type: 'WITHDRAW'; childId: string; amount: number }
   | { type: 'ADD_TO_SAVINGS'; childId: string; amount: number }
@@ -149,6 +159,7 @@ function appReducer(state: AppState, action: Action): AppState {
         pin: action.pin,
         role: action.role,
         avatar: action.avatar,
+        age: action.age,
       };
       // If registering as child, also create a Child entry
       let newChildren = state.children;
@@ -156,6 +167,7 @@ function appReducer(state: AppState, action: Action): AppState {
         const newChild: Child = {
           id: newUser.id,
           name: action.name,
+          age: action.age || 10,
           avatar: action.avatar,
           balance: 0,
           savings: 0,
@@ -190,6 +202,7 @@ function appReducer(state: AppState, action: Action): AppState {
       const newChild: Child = {
         id: childId,
         name: action.name,
+        age: action.age,
         avatar: action.avatar,
         balance: 0,
         savings: 0,
@@ -208,6 +221,7 @@ function appReducer(state: AppState, action: Action): AppState {
         pin: '1234',
         role: 'child',
         avatar: action.avatar,
+        age: action.age,
       };
       return {
         ...state,
@@ -478,13 +492,14 @@ const initialState: AppState = {
   selectedChildId: null,
   users: [
     { id: 'parent-1', name: 'Ээж', pin: '1234', role: 'parent', avatar: 'shield' },
-    { id: 'child-1', name: 'Болд', pin: '0000', role: 'child', avatar: 'rocket' },
-    { id: 'child-2', name: 'Сарнай', pin: '1111', role: 'child', avatar: 'star' },
+    { id: 'child-1', name: 'Болд', pin: '0000', role: 'child', avatar: 'rocket', age: 12 },
+    { id: 'child-2', name: 'Сарнай', pin: '1111', role: 'child', avatar: 'star', age: 8 },
   ],
   children: [
     {
       id: 'child-1',
       name: 'Болд',
+      age: 12,
       avatar: 'rocket',
       balance: 0,
       savings: 0,
@@ -500,6 +515,7 @@ const initialState: AppState = {
     {
       id: 'child-2',
       name: 'Сарнай',
+      age: 8,
       avatar: 'star',
       balance: 0,
       savings: 0,
@@ -566,4 +582,5 @@ export function useApp() {
   return ctx;
 }
 
-export { lessonsData, achievementsData };
+export { lessonsData, achievementsData, getAgeGroup };
+export type { AgeGroup };

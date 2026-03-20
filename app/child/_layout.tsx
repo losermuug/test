@@ -1,26 +1,38 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { View, Platform } from 'react-native';
-import { Home, Wallet, CheckSquare, PiggyBank, User } from 'lucide-react-native';
+import { Home, Wallet, CheckSquare, PiggyBank, User, BookOpen, Gamepad2 } from 'lucide-react-native';
+import { useApp, getAgeGroup } from '@/contexts/AppContext';
 
 export default function ChildLayout() {
+  const { getSelectedChild } = useApp();
+  const child = getSelectedChild();
+  const ageGroup = child ? getAgeGroup(child.age) : 'teen';
+
+  const isJunior = ageGroup === 'junior';
+  const isSenior = ageGroup === 'senior';
+
+  // Theme colors based on age group
+  const activeColor = isJunior ? '#FF6B6B' : isSenior ? '#1a1a2e' : '#6C63FF';
+  const tabBg = isJunior ? '#FFF5F5' : '#FFFFFF';
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: tabBg,
           borderTopWidth: 1,
-          borderTopColor: '#F2F2F7',
+          borderTopColor: isJunior ? '#FFE0E0' : '#F2F2F7',
           height: Platform.OS === 'ios' ? 88 : 70,
           paddingBottom: Platform.OS === 'ios' ? 28 : 12,
           paddingTop: 10,
           elevation: 0,
           shadowOpacity: 0,
         },
-        tabBarActiveTintColor: '#6C63FF',
+        tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: '#C7C7CC',
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+        tabBarLabelStyle: { fontSize: isJunior ? 11 : 10, fontWeight: '600', marginTop: 2 },
         tabBarItemStyle: { gap: 2 },
       }}
     >
@@ -32,9 +44,9 @@ export default function ChildLayout() {
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? '#6C63FF15' : 'transparent',
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
-              <Home size={20} color={color} />
+              <Home size={isJunior ? 22 : 20} color={color} />
             </View>
           ),
         }}
@@ -42,14 +54,14 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="savings"
         options={{
-          title: 'Хадгаламж',
+          title: isJunior ? 'Хадгал' : 'Хадгаламж',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               padding: 5,
               borderRadius: 12,
               backgroundColor: focused ? '#4ECDC415' : 'transparent',
             }}>
-              <PiggyBank size={20} color={color} />
+              <PiggyBank size={isJunior ? 22 : 20} color={color} />
             </View>
           ),
         }}
@@ -57,14 +69,14 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="loans"
         options={{
-          title: 'Зээл',
+          title: isJunior ? 'Суралц' : 'Зээл',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? '#6C63FF15' : 'transparent',
+              backgroundColor: focused ? (isJunior ? '#FF950015' : activeColor + '15') : 'transparent',
             }}>
-              <Wallet size={20} color={color} />
+              {isJunior ? <BookOpen size={22} color={color} /> : <Wallet size={20} color={color} />}
             </View>
           ),
         }}
@@ -77,9 +89,9 @@ export default function ChildLayout() {
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? '#6C63FF15' : 'transparent',
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
-              <CheckSquare size={20} color={color} />
+              <CheckSquare size={isJunior ? 22 : 20} color={color} />
             </View>
           ),
         }}
@@ -98,9 +110,9 @@ export default function ChildLayout() {
             <View style={{
               padding: 5,
               borderRadius: 12,
-              backgroundColor: focused ? '#6C63FF15' : 'transparent',
+              backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
-              <User size={20} color={color} />
+              <User size={isJunior ? 22 : 20} color={color} />
             </View>
           ),
         }}

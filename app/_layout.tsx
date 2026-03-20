@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AppProvider } from '@/contexts/AppContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export {
   ErrorBoundary,
@@ -38,13 +39,15 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <AppProvider>
-      <GluestackUIProvider mode="light">
-        <ThemeProvider value={DefaultTheme}>
-          <StatusBar style="auto" />
-          <Slot />
-        </ThemeProvider>
-      </GluestackUIProvider>
-    </AppProvider>
+    <SafeAreaProvider>
+      <AppProvider>
+        <GluestackUIProvider mode="light">
+          <ThemeProvider value={DefaultTheme}>
+            <StatusBar style="auto" />
+            <Slot />
+          </ThemeProvider>
+        </GluestackUIProvider>
+      </AppProvider>
+    </SafeAreaProvider>
   );
 }
