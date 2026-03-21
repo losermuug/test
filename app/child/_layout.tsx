@@ -54,14 +54,15 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="savings"
         options={{
-          title: isJunior ? 'Хадгал' : 'Хадгаламж',
+          title: 'Хадгаламж',
+          href: isJunior ? null : undefined,
           tabBarIcon: ({ color, focused }) => (
             <View style={{
               padding: 5,
               borderRadius: 12,
               backgroundColor: focused ? activeColor + '15' : 'transparent',
             }}>
-              <PiggyBank size={isJunior ? 22 : 20} color={color} />
+              <PiggyBank size={20} color={color} />
             </View>
           ),
         }}

@@ -71,7 +71,7 @@ export default function ChildSavings() {
           </TouchableOpacity>
         </View>
 
-        {formType === 'add' && (
+        {formType === 'add' && !isJunior && (
           <View style={{ backgroundColor: bgColor, borderRadius: 16, padding: 12, marginBottom: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Wallet size={16} color="#34C759" />
             <Text style={{ fontSize: 13, color: '#8E8E93' }}>Хэтэвчээс: ₮{child.balance.toLocaleString()}</Text>
@@ -134,10 +134,6 @@ export default function ChildSavings() {
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
             <Text style={{ fontSize: 24, fontWeight: '900', color: '#1a1a2e' }}>Миний хагас банк 🐷</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-              <Wallet size={14} color="#C084FC" />
-              <Text style={{ fontSize: 13, color: '#C084FC', fontWeight: '700' }}>Хэтэвч: ₮{child.balance.toLocaleString()}</Text>
-            </View>
           </Animated.View>
 
           {/* Big PiggyBank Card */}
@@ -244,7 +240,7 @@ export default function ChildSavings() {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // SENIOR (15-18) — Dark fintech with interest calculator
+  // SENIOR (15-18) — Light fintech with interest calculator
   // ═══════════════════════════════════════════════════════════
   if (isSenior) {
     const interestRate = 0.05;
@@ -252,20 +248,20 @@ export default function ChildSavings() {
     const yearlyInterest = Math.round(child.savings * interestRate);
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#0D0D16' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#F4F4F9' }}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
-            <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' }}>Хадгаламжийн данс</Text>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: '#fff', marginTop: 4 }}>Хадгаламж</Text>
+            <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' }}>Хадгаламжийн данс</Text>
+            <Text style={{ fontSize: 22, fontWeight: '900', color: '#1a1a2e', marginTop: 4 }}>Хадгаламж</Text>
           </Animated.View>
 
           {/* Main Balance Card */}
           <Animated.View entering={FadeInDown.duration(500).delay(100)} style={{ marginHorizontal: 24, marginTop: 8 }}>
             <View style={{
-              backgroundColor: '#14142B', borderRadius: 28, padding: 24,
-              borderWidth: 1, borderColor: '#0A7EA420',
-              shadowColor: '#0A7EA4', shadowOpacity: 0.1, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
+              backgroundColor: '#FFFFFF', borderRadius: 28, padding: 24,
+              borderWidth: 1, borderColor: '#E5E7EB',
+              shadowColor: '#0A7EA4', shadowOpacity: 0.08, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
             }}>
               <View style={{ position: 'absolute', top: 20, right: 20, width: 8, height: 8, borderRadius: 4, backgroundColor: '#0A7EA4' }} />
 
@@ -273,34 +269,34 @@ export default function ChildSavings() {
                 <View style={{ width: 34, height: 34, borderRadius: 11, backgroundColor: '#0A7EA418', justifyContent: 'center', alignItems: 'center' }}>
                   <PiggyBank size={17} color="#0A7EA4" />
                 </View>
-                <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' }}>Нийт хадгаламж</Text>
+                <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' }}>Нийт хадгаламж</Text>
               </View>
-              <Text style={{ fontSize: 40, fontWeight: '900', color: '#fff', letterSpacing: -1 }}>
+              <Text style={{ fontSize: 40, fontWeight: '900', color: '#1a1a2e', letterSpacing: -1 }}>
                 ₮{child.savings.toLocaleString()}
               </Text>
 
               {/* Progress */}
               <View style={{ marginTop: 16 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <Text style={{ fontSize: 11, color: '#4A4A6A', fontWeight: '600' }}>Зорилго: ₮{savingsGoal.toLocaleString()}</Text>
+                  <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>Зорилго: ₮{savingsGoal.toLocaleString()}</Text>
                   <Text style={{ fontSize: 11, fontWeight: '800', color: '#0A7EA4' }}>{Math.round(progress)}%</Text>
                 </View>
-                <View style={{ height: 8, backgroundColor: '#0D0D1E', borderRadius: 4, overflow: 'hidden' }}>
+                <View style={{ height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, overflow: 'hidden' }}>
                   <View style={{ width: `${progress}%`, height: '100%', backgroundColor: '#0A7EA4', borderRadius: 4 }} />
                 </View>
               </View>
 
               {/* Stats row */}
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-                <View style={{ flex: 1, backgroundColor: '#0D0D1E', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#1E1E30' }}>
-                  <Text style={{ fontSize: 8, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Сарын хүү</Text>
+                <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+                  <Text style={{ fontSize: 8, color: '#6B7280', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Сарын хүү</Text>
                   <Text style={{ fontSize: 18, fontWeight: '900', color: '#0A7EA4', marginTop: 4 }}>₮{monthlyInterest.toLocaleString()}</Text>
-                  <Text style={{ fontSize: 9, color: '#4A4A6A', fontWeight: '600', marginTop: 2 }}>5% жилийн хүү</Text>
+                  <Text style={{ fontSize: 9, color: '#6B7280', fontWeight: '600', marginTop: 2 }}>5% жилийн хүү</Text>
                 </View>
-                <View style={{ flex: 1, backgroundColor: '#0D0D1E', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#1E1E30' }}>
-                  <Text style={{ fontSize: 8, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Жилийн хүү</Text>
+                <View style={{ flex: 1, backgroundColor: '#F9FAFB', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' }}>
+                  <Text style={{ fontSize: 8, color: '#6B7280', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>Жилийн хүү</Text>
                   <Text style={{ fontSize: 18, fontWeight: '900', color: '#0A84FF', marginTop: 4 }}>₮{yearlyInterest.toLocaleString()}</Text>
-                  <Text style={{ fontSize: 9, color: '#4A4A6A', fontWeight: '600', marginTop: 2 }}>Таамаг тооцоо</Text>
+                  <Text style={{ fontSize: 9, color: '#6B7280', fontWeight: '600', marginTop: 2 }}>Таамаг тооцоо</Text>
                 </View>
               </View>
             </View>
@@ -314,27 +310,27 @@ export default function ChildSavings() {
                 <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Хадгалах</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#1E1E30', borderRadius: 18, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#2E2E4A' }}
+                style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 18, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#E5E7EB' }}
                 onPress={() => openForm('withdraw')} activeOpacity={0.85}>
-                <ArrowUpFromLine size={16} color="#AEAEB2" />
-                <Text style={{ color: '#AEAEB2', fontWeight: '800', fontSize: 14 }}>Буцаах</Text>
+                <ArrowUpFromLine size={16} color="#4B5563" />
+                <Text style={{ color: '#4B5563', fontWeight: '800', fontSize: 14 }}>Буцаах</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
 
-          {renderForm('#0A7EA4', '#0D0D1E', '#0A7EA425')}
+          {renderForm('#0A7EA4', '#F9FAFB', '#0A7EA425')}
 
           {/* Interest Calculator Info */}
           <Animated.View entering={FadeInDown.duration(500).delay(200)} style={{ marginHorizontal: 24, marginTop: 20 }}>
-            <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 12 }}>Хадгаламжийн тооцоолол</Text>
-            <View style={{ backgroundColor: '#14142B', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#1E1E30' }}>
+            <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase', marginBottom: 12 }}>Хадгаламжийн тооцоолол</Text>
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#E5E7EB' }}>
               {[
                 { label: '6 сарын дараа', value: `₮${Math.round(child.savings * (1 + interestRate / 2)).toLocaleString()}`, color: '#0A7EA4' },
                 { label: '1 жилийн дараа', value: `₮${Math.round(child.savings * (1 + interestRate)).toLocaleString()}`, color: '#0A84FF' },
                 { label: '3 жилийн дараа', value: `₮${Math.round(child.savings * Math.pow(1 + interestRate, 3)).toLocaleString()}`, color: '#0A7EA4' },
               ].map((item, i) => (
-                <View key={item.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < 2 ? 1 : 0, borderBottomColor: '#1E1E30' }}>
-                  <Text style={{ fontSize: 13, color: '#AEAEB2', fontWeight: '600' }}>{item.label}</Text>
+                <View key={item.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: i < 2 ? 1 : 0, borderBottomColor: '#F3F4F6' }}>
+                  <Text style={{ fontSize: 13, color: '#6B7280', fontWeight: '600' }}>{item.label}</Text>
                   <Text style={{ fontSize: 14, fontWeight: '800', color: item.color }}>{item.value}</Text>
                 </View>
               ))}
@@ -343,7 +339,7 @@ export default function ChildSavings() {
                 <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#0A84FF25', justifyContent: 'center', alignItems: 'center' }}>
                   <Lightbulb size={16} color="#0A84FF" />
                 </View>
-                <Text style={{ flex: 1, fontSize: 12, color: '#7A7A9A', lineHeight: 18, fontWeight: '500' }}>
+                <Text style={{ flex: 1, fontSize: 12, color: '#4B5563', lineHeight: 18, fontWeight: '500' }}>
                   Нийлмэл хүүгийн ачаар хадгаламж урт хугацаанд хурдан өсдөг. Эрт эхэлсэн тусам илүү!
                 </Text>
               </View>
@@ -352,13 +348,13 @@ export default function ChildSavings() {
 
           {/* Wallet info */}
           <Animated.View entering={FadeInDown.duration(500).delay(300)} style={{ marginHorizontal: 24, marginTop: 16 }}>
-            <View style={{ backgroundColor: '#14142B', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#1E1E30', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#E5E7EB', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: '#FFB80018', justifyContent: 'center', alignItems: 'center' }}>
                 <Wallet size={18} color="#FFB800" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 10, color: '#4A4A6A', fontWeight: '700', letterSpacing: 1 }}>ХЭТЭВЧ</Text>
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#fff', marginTop: 2 }}>₮{child.balance.toLocaleString()}</Text>
+                <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '700', letterSpacing: 1 }}>ХЭТЭВЧ</Text>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#1a1a2e', marginTop: 2 }}>₮{child.balance.toLocaleString()}</Text>
               </View>
             </View>
           </Animated.View>

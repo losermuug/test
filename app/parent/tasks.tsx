@@ -38,7 +38,9 @@ export default function ParentTasks() {
 
   const handleApprove = (childId: string, taskId: string) => {
     dispatch({ type: 'APPROVE_TASK', childId, taskId });
-    Alert.alert('Баталгаажлаа!', 'Хүүхдийн хэтэвчинд мөнгө нэмэгдлээ.');
+    const child = state.children.find(c => c.id === childId);
+    const isJunior = child && child.age <= 9;
+    Alert.alert('Баталгаажлаа!', isJunior ? 'Шагнал хүүхдийн хадгаламжид нэмэгдлээ! 🐷' : 'Хүүхдийн хэтэвчинд мөнгө нэмэгдлээ.');
   };
 
   const allTasks = state.children.flatMap(c =>

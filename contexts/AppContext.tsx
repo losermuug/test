@@ -427,9 +427,11 @@ function appReducer(state: AppState, action: Action): AppState {
         children: updateChildInList(state.children, action.childId, child => {
           const task = child.tasks.find(t => t.id === action.taskId);
           if (!task) return child;
+          const isJunior = getAgeGroup(child.age) === 'junior';
           return {
             ...child,
-            balance: child.balance + task.reward,
+            balance: isJunior ? child.balance : child.balance + task.reward,
+            savings: isJunior ? child.savings + task.reward : child.savings,
             tasks: child.tasks.map(t =>
               t.id === action.taskId ? { ...t, status: 'approved' as const } : t
             ),
@@ -491,9 +493,10 @@ const initialState: AppState = {
   currentRole: null,
   selectedChildId: null,
   users: [
-    { id: 'parent-1', name: 'Ээж', pin: '1234', role: 'parent', avatar: 'shield' },
+    { id: 'parent-1', name: 'Ээж', pin: '0000', role: 'parent', avatar: 'shield' },
     { id: 'child-1', name: 'Болд', pin: '0000', role: 'child', avatar: 'rocket', age: 12 },
-    { id: 'child-2', name: 'Сарнай', pin: '1111', role: 'child', avatar: 'star', age: 8 },
+    { id: 'child-2', name: 'Сарнай', pin: '0000', role: 'child', avatar: 'star', age: 8 },
+    { id: 'child-3', name: 'Бат', pin: '0000', role: 'child', avatar: 'star', age:17 },
   ],
   children: [
     {
@@ -528,6 +531,22 @@ const initialState: AppState = {
       lastActiveDate: new Date().toISOString(),
       creditScore: 3,
     },
+    {
+      id: 'child-3',
+      name: 'Бат',
+      age: 17,
+      avatar: 'star',
+      balance: 0,
+      savings: 0,
+      loans: [],
+      loanRequests: [],
+      tasks: [],
+      achievements: [],
+      lessonsCompleted: [],
+      streak: 0,
+      lastActiveDate: new Date().toISOString(),
+      creditScore: 3,
+    },
   ],
   isLoaded: false,
 };
@@ -546,11 +565,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(appReducer, { ...initialState, isLoaded: true });
+  const [state, dispatch] = useReducer(appReducer, initialState);
 
   useEffect(() => {
+    // Save only when loaded
     if (state.isLoaded) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(console.error);
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state)).catch(err => {
+        console.error('AsyncStorage error:', err);
+      });
     }
   }, [state]);
 
@@ -560,9 +582,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (raw) {
           const parsed = JSON.parse(raw) as AppState;
           dispatch({ type: 'LOAD_STATE', state: parsed });
+        } else {
+          // Marking as loaded even if no saved state exists
+          dispatch({ type: 'LOAD_STATE', state: initialState });
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        console.error('Failed to load state:', err);
+        // Fallback to initial state if load fails
+        dispatch({ type: 'LOAD_STATE', state: initialState });
+      });
   }, []);
 
   const getChild = (childId: string) => state.children.find(c => c.id === childId);

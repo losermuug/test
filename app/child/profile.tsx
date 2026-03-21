@@ -77,10 +77,12 @@ export default function ChildProfile() {
           </View>
           <Text className="text-2xl font-black text-[#1a1a2e]">{child.name}</Text>
           <View className="flex-row items-center gap-2 mt-2">
-            <View className="flex-row items-center px-3 py-1.5 rounded-full gap-1" style={{ backgroundColor: primaryColor + '15' }}>
-              <Star size={14} color={primaryColor} fill={primaryColor} />
-              <Text className="text-xs font-bold" style={{ color: primaryColor }}>Итгэлцэл: {child.creditScore}/5</Text>
-            </View>
+            {!isJunior && (
+              <View className="flex-row items-center px-3 py-1.5 rounded-full gap-1" style={{ backgroundColor: primaryColor + '15' }}>
+                <Star size={14} color={primaryColor} fill={primaryColor} />
+                <Text className="text-xs font-bold" style={{ color: primaryColor }}>Итгэлцэл: {child.creditScore}/5</Text>
+              </View>
+            )}
             <View className="flex-row items-center px-3 py-1.5 rounded-full gap-1" style={{ backgroundColor: primaryColor + '15' }}>
               <Flame size={14} color={primaryColor} />
               <Text className="text-xs font-bold" style={{ color: primaryColor }}>{child.streak} хоног</Text>
@@ -92,46 +94,47 @@ export default function ChildProfile() {
         <Animated.View entering={FadeInDown.duration(600).delay(100)} className="px-6 mt-6">
           <Text className="text-base font-bold text-[#1a1a2e] mb-3">Санхүүгийн мэдээлэл</Text>
           <View className="bg-white rounded-3xl p-5 border border-[#F2F2F7] shadow-sm">
-            <View className="flex-row gap-3 mb-3">
-              <View className="flex-1 bg-[#34C759]/5 rounded-2xl p-3.5 items-center border border-[#34C759]/10">
-                <Wallet size={20} color="#34C759" />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хэтэвч</Text>
-                {isJunior ? (
-                  <MoneyVisualizer amount={child.balance} size={24} textColor="#34C759" />
-                ) : (
-                  <Text className="text-base font-black text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
-                )}
-              </View>
-              <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
-                <PiggyBank size={20} color={primaryColor} />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хадгаламж</Text>
-                {isJunior ? (
-                  <MoneyVisualizer amount={child.savings} size={24} textColor={primaryColor} />
-                ) : (
-                  <Text className="text-base font-black" style={{ color: primaryColor }}>₮{child.savings.toLocaleString()}</Text>
-                )}
-              </View>
-            </View>
-            <View className="flex-row gap-3">
-              <View className="flex-1 bg-[#FF3B30]/5 rounded-2xl p-3.5 items-center border border-[#FF3B30]/10">
-                <TrendingDown size={20} color="#FF3B30" />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт өр</Text>
-                {isJunior ? (
-                  <MoneyVisualizer amount={totalDebt} size={24} textColor="#FF3B30" />
-                ) : (
-                  <Text className="text-base font-black text-[#FF3B30]">₮{totalDebt.toLocaleString()}</Text>
-                )}
-              </View>
-              <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
-                <Trophy size={20} color={primaryColor} />
-                <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт олсон</Text>
-                {isJunior ? (
-                  <MoneyVisualizer amount={totalEarned} size={24} textColor={primaryColor} />
-                ) : (
+            {isJunior ? (
+              <View className="flex-row gap-3">
+                <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: '#F9A8D420', borderColor: '#F9A8D450' }}>
+                  <PiggyBank size={22} color="#EC4899" />
+                  <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хадгаламж</Text>
+                  <Text className="text-base font-black" style={{ color: '#EC4899' }}>₮{child.savings.toLocaleString()}</Text>
+                </View>
+                <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
+                  <Trophy size={22} color={primaryColor} />
+                  <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт олсон</Text>
                   <Text className="text-base font-black" style={{ color: primaryColor }}>₮{totalEarned.toLocaleString()}</Text>
-                )}
+                </View>
               </View>
-            </View>
+            ) : (
+              <>
+                <View className="flex-row gap-3 mb-3">
+                  <View className="flex-1 bg-[#34C759]/5 rounded-2xl p-3.5 items-center border border-[#34C759]/10">
+                    <Wallet size={20} color="#34C759" />
+                    <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хэтэвч</Text>
+                    <Text className="text-base font-black text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
+                  </View>
+                  <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
+                    <PiggyBank size={20} color={primaryColor} />
+                    <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Хадгаламж</Text>
+                    <Text className="text-base font-black" style={{ color: primaryColor }}>₮{child.savings.toLocaleString()}</Text>
+                  </View>
+                </View>
+                <View className="flex-row gap-3">
+                  <View className="flex-1 bg-[#FF3B30]/5 rounded-2xl p-3.5 items-center border border-[#FF3B30]/10">
+                    <TrendingDown size={20} color="#FF3B30" />
+                    <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт өр</Text>
+                    <Text className="text-base font-black text-[#FF3B30]">₮{totalDebt.toLocaleString()}</Text>
+                  </View>
+                  <View className="flex-1 rounded-2xl p-3.5 items-center border" style={{ backgroundColor: primaryColor + '0D', borderColor: primaryColor + '1A' }}>
+                    <Trophy size={20} color={primaryColor} />
+                    <Text className="text-xs text-[#AEAEB2] mt-1.5 mb-1">Нийт олсон</Text>
+                    <Text className="text-base font-black" style={{ color: primaryColor }}>₮{totalEarned.toLocaleString()}</Text>
+                  </View>
+                </View>
+              </>
+            )}
           </View>
         </Animated.View>
 
@@ -141,13 +144,13 @@ export default function ChildProfile() {
           <View className="bg-white rounded-3xl border border-[#F2F2F7] shadow-sm overflow-hidden">
             {[
               { label: 'Гүйцэтгэсэн даалгавар', value: `${completedTasks}`, icon: <Star size={18} color={primaryColor} /> },
-              { label: 'Төлсөн зээл', value: `${paidLoans}`, icon: <TrendingDown size={18} color="#34C759" /> },
+              ...(!isJunior ? [{ label: 'Төлсөн зээл', value: `${paidLoans}`, icon: <TrendingDown size={18} color="#34C759" /> }] : []),
               { label: 'Дууссан хичээл', value: `${child.lessonsCompleted.length}/6`, icon: <BookOpen size={18} color={primaryColor} /> },
               { label: 'Амжилтууд', value: `${child.achievements.length}/${achievementsData.length}`, icon: <Trophy size={18} color={primaryColor} /> },
-            ].map((item, i) => (
+            ].map((item, i, arr) => (
               <View
                 key={i}
-                className={`flex-row items-center justify-between p-4 ${i < 3 ? 'border-b border-[#F2F2F7]' : ''}`}
+                className={`flex-row items-center justify-between p-4 ${i < arr.length - 1 ? 'border-b border-[#F2F2F7]' : ''}`}
               >
                 <View className="flex-row items-center gap-3">
                   <View className="w-9 h-9 rounded-xl bg-[#F8F8FC] justify-center items-center">
