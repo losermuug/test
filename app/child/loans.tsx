@@ -45,7 +45,8 @@ export default function ChildLoans() {
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
 
   // Senior loan duration
-  const [loanDuration, setLoanDuration] = useState<number>(14);
+  const [loanDuration, setLoanDuration] = useState<string>('14');
+  const [loanInstallments, setLoanInstallments] = useState<number>(1);
 
   if (!child) return null;
 
@@ -53,7 +54,7 @@ export default function ChildLoans() {
   const isJunior = ageGroup === 'junior';
   const isSenior = ageGroup === 'senior';
 
-  const activeLoans = child.loans.filter(l => l.status === 'active');
+  const activeLoans = child.loans.filter(l => l.status === 'active' || l.status === 'overdue');
   const paidLoans = child.loans.filter(l => l.status === 'paid');
   const pendingRequests = child.loanRequests.filter(r => r.status === 'pending');
   const respondedRequests = child.loanRequests.filter(r => r.status !== 'pending');
@@ -81,7 +82,7 @@ export default function ChildLoans() {
                 dispatch({ type: 'UNLOCK_ACHIEVEMENT', childId: child.id, achievementId: 'first-loan-repaid' });
                 Alert.alert('Баяр хүргэе!', 'Зээлээ бүрэн төллөө!');
               }
-              const otherActive = child.loans.filter(l => l.status === 'active' && l.id !== loanId);
+              const otherActive = child.loans.filter(l => (l.status === 'active' || l.status === 'overdue') && l.id !== loanId);
               if (otherActive.length === 0) dispatch({ type: 'UNLOCK_ACHIEVEMENT', childId: child.id, achievementId: 'zero-balance' });
             } else {
               Alert.alert('Амжилттай', `₮${repayAmount.toLocaleString()} төлөгдлөө!`);
@@ -107,6 +108,8 @@ export default function ChildLoans() {
       childId: child.id,
       amount: amountNum,
       purpose: purpose.trim(),
+      dueDays: isSenior ? (parseInt(loanDuration) || 0) : undefined,
+      installments: isSenior ? loanInstallments : undefined,
     });
     setRequestAmount('');
     setPurpose('');
@@ -362,26 +365,40 @@ export default function ChildLoans() {
                 ))}
               </View>
 
-              {/* Loan Duration Selector */}
+              {/* Loan Duration Input */}
               <View className="flex-row items-center gap-2 mb-2">
                 <CalendarDays size={14} color="#8E8E93" />
-                <Text className="text-sm font-semibold text-[#8E8E93]">Зээлийн хугацаа</Text>
+                <Text className="text-sm font-semibold text-[#8E8E93]">Зээлийн хугацаа (хоног)</Text>
+              </View>
+              <TextInput
+                className="bg-[#F0F0F8] rounded-2xl p-4 text-base text-[#1a1a2e] mb-3 border border-[#E0E0EA]"
+                value={loanDuration}
+                onChangeText={setLoanDuration}
+                keyboardType="number-pad"
+                placeholder="Жишээ: 14"
+                placeholderTextColor="#C7C7CC"
+              />
+
+              {/* Installments Selector */}
+              <View className="flex-row items-center gap-2 mb-2">
+                <CalendarDays size={14} color="#8E8E93" />
+                <Text className="text-sm font-semibold text-[#8E8E93]">Төлөх хуваарь</Text>
               </View>
               <View className="flex-row gap-2 mb-3">
-                {[{ days: 7, label: '7 хоног' }, { days: 14, label: '14 хоног' }, { days: 30, label: '30 хоног' }].map(opt => (
+                {[1, 2, 4].map(opt => (
                   <TouchableOpacity
-                    key={opt.days}
-                    className={`flex-1 py-3 rounded-2xl items-center ${loanDuration === opt.days ? 'bg-[#0A7EA4]' : 'bg-[#F0F0F8]'}`}
-                    onPress={() => setLoanDuration(opt.days)}
+                    key={opt}
+                    className={`flex-1 py-3 rounded-2xl items-center ${loanInstallments === opt ? 'bg-[#0A7EA4]' : 'bg-[#F0F0F8]'}`}
+                    onPress={() => setLoanInstallments(opt)}
                   >
-                    <Text className={`text-xs font-bold ${loanDuration === opt.days ? 'text-white' : 'text-[#8E8E93]'}`}>
-                      {opt.label}
+                    <Text className={`text-xs font-bold ${loanInstallments === opt ? 'text-white' : 'text-[#8E8E93]'}`}>
+                      {opt} хувааж
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              {/* Interest & Payment Schedule Preview */}
+              {/* Payment Schedule Preview Without Interest */}
               {requestAmount && parseInt(requestAmount) > 0 && (
                 <View className="bg-[#0A7EA4]/5 rounded-2xl p-4 mb-3 border border-[#0A7EA4]/10">
                   <View className="flex-row items-center gap-2 mb-2">
@@ -394,29 +411,20 @@ export default function ChildLoans() {
                       <Text className="text-xs font-bold text-[#1a1a2e]">₮{parseInt(requestAmount).toLocaleString()}</Text>
                     </View>
                     <View className="flex-row justify-between">
-                      <Text className="text-xs text-[#8E8E93]">Хүү (10%)</Text>
-                      <Text className="text-xs font-bold text-[#0A7EA4]">₮{Math.round(parseInt(requestAmount) * 0.1).toLocaleString()}</Text>
-                    </View>
-                    <View className="flex-row justify-between">
                       <Text className="text-xs text-[#8E8E93]">Хугацаа</Text>
-                      <Text className="text-xs font-bold text-[#1a1a2e]">{loanDuration} хоног</Text>
+                      <Text className="text-xs font-bold text-[#1a1a2e]">{parseInt(loanDuration) || 0} хоног</Text>
                     </View>
                     <View className="h-px bg-[#E0E0EA] my-1" />
-                    <View className="flex-row justify-between">
-                      <Text className="text-sm font-bold text-[#1a1a2e]">Нийт төлөх</Text>
-                      <Text className="text-sm font-black text-[#0A7EA4]">₮{Math.round(parseInt(requestAmount) * 1.1).toLocaleString()}</Text>
-                    </View>
-                    {loanDuration >= 14 && (
-                      <View className="bg-[#0A7EA4]/5 rounded-lg p-2 mt-1">
-                        <View className="flex-row items-center gap-1 mb-1">
-                          <CalendarDays size={10} color="#0A7EA4" />
-                          <Text className="text-[10px] font-bold text-[#0A7EA4]">Хуваарьт төлбөр (7 хоног тутам)</Text>
-                        </View>
-                        <Text className="text-xs text-[#3C3C43]">
-                          {Math.ceil(loanDuration / 7)} удаа × ₮{Math.round((parseInt(requestAmount) * 1.1) / Math.ceil(loanDuration / 7)).toLocaleString()}
-                        </Text>
+                    <View className="bg-[#0A7EA4]/5 rounded-lg p-2 mt-1">
+                      <View className="flex-row items-center gap-1 mb-1">
+                        <CalendarDays size={10} color="#0A7EA4" />
+                        <Text className="text-[10px] font-bold text-[#0A7EA4]">Хуваарьт хувааж төлөх</Text>
                       </View>
-                    )}
+                      <Text className="text-xs font-bold text-[#3C3C43]">
+                        {loanInstallments} удаа × ₮{Math.round(parseInt(requestAmount) / loanInstallments).toLocaleString()} төлнө (Хүүгүй дүнгээр)
+                      </Text>
+                      <Text className="text-[10px] text-[#8E8E93] mt-1">Тооцоонд хүү ороогүй бөгөөд эцэг эх хүүг шийднэ.</Text>
+                    </View>
                   </View>
                 </View>
               )}

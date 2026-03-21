@@ -14,7 +14,7 @@ export default function LoanCard({ loan, onRepay, showRepay = false }: LoanCardP
   const progressPercent = Math.round(progress * 100);
   const remaining = loan.totalDue - loan.paidAmount;
   const dueDate = new Date(loan.dueDate);
-  const isOverdue = new Date() > dueDate && loan.status === 'active';
+  const isOverdue = loan.status === 'overdue' || (new Date() > dueDate && loan.status === 'active');
   const isPaid = loan.status === 'paid';
 
   const statusConfig = isPaid
@@ -74,7 +74,7 @@ export default function LoanCard({ loan, onRepay, showRepay = false }: LoanCardP
         </View>
       </View>
 
-      {showRepay && loan.status === 'active' && (
+      {showRepay && (loan.status === 'active' || loan.status === 'overdue') && (
         <TouchableOpacity
           className="bg-[#6C63FF] rounded-2xl py-4 items-center mt-4 flex-row justify-center gap-2"
           onPress={onRepay}

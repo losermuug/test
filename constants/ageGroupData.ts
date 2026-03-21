@@ -29,7 +29,7 @@ export const AGE_GROUP_CONFIG: Record<AgeGroup, AgeGroupConfig> = {
     colorSecondary: '#4ECDC4',
     bgGradient: '#F8F8FC',
     loanEnabled: true,
-    lessonIds: ['what-is-money', 'saving-vs-borrowing', 'what-is-interest', 'budgeting', 'financial-goals', 'smart-spending'],
+    lessonIds: ['what-is-money', 'saving-vs-borrowing', 'what-is-interest', 'budgeting', 'smart-spending', 'financial-goals'],
   },
   senior: {
     label: 'Ахлах санхүүч',
@@ -38,7 +38,7 @@ export const AGE_GROUP_CONFIG: Record<AgeGroup, AgeGroupConfig> = {
     colorSecondary: '#6C63FF',
     bgGradient: '#F0F0F8',
     loanEnabled: true,
-    lessonIds: ['what-is-money', 'saving-vs-borrowing', 'what-is-interest', 'budgeting', 'financial-goals', 'smart-spending'],
+    lessonIds: ['credit-score-advanced', 'tax-and-income', 'investing-basics', 'compound-interest', 'financial-goals'],
   },
 };
 
@@ -92,6 +92,13 @@ export interface MoneyLesson {
   content: string;
   funFact: string;
   badgeId: string;
+  game?: {
+    type: 'select' | 'collect';
+    question?: string;
+    options?: { id: string; icon: string; label: string; isCorrect: boolean; color: string }[];
+    targetCount?: number;
+    collectIcon?: string;
+  };
 }
 
 export const juniorMoneyLessons: MoneyLesson[] = [
@@ -105,6 +112,14 @@ export const juniorMoneyLessons: MoneyLesson[] = [
     content: 'Мөнгө гэдэг нь бид юм худалдаж авахад ашигладаг зүйл юм!\n\n• Жишээ нь: Алим авахын тулд мөнгө өгнө\n• Тоглоом авахын тулд мөнгө хэрэгтэй\n• Ном авахдаа мөнгөөр солилцдог\n\nМөнгө нь зоос болон цаасан мөнгө гэж 2 төрөлтэй:\n• Зоос: 20₮, 50₮, 100₮, 200₮\n• Цаасан: 500₮, 1000₮, 5000₮, 10000₮, 20000₮',
     funFact: 'Мэдсэн үү? Эрт дээр үед хүмүүс мөнгөний оронд мал, давс, бүрхэвч зэргийг ашигладаг байсан!',
     badgeId: 'money-basics-learned',
+    game: {
+      type: 'select',
+      question: 'Аль нь мөнгөн тэмдэгт вэ?',
+      options: [
+        { id: 'opt1', icon: 'Gamepad2', label: 'Тоглоом', isCorrect: false, color: '#FF3B30' },
+        { id: 'opt2', icon: 'Banknote', label: 'Мөнгө', isCorrect: true, color: '#34C759' },
+      ],
+    },
   },
   {
     id: 'what-is-saving-jr',
@@ -116,6 +131,12 @@ export const juniorMoneyLessons: MoneyLesson[] = [
     content: 'Хадгаламж гэдэг нь мөнгөө зарахгүйгээр хуримтлуулж хадгалах юм!\n\n• Хадгаламжийн гахайд мөнгөө хийж хадгалдаг\n• Банкинд мөнгөө хадгалж болно\n• Апп дотор хадгалж болно\n\nЯагаад хадгалах вэ?\n• Том зүйл авахын тулд (тоглоом, дугуй)\n• Яаралтай үед ашиглахын тулд\n• Ирээдүйд баялаг болохын тулд',
     funFact: 'Хэрэв өдөр бүр 100₮ хадгалвал 1 жилийн дараа 36,500₮ болно!',
     badgeId: 'saving-basics-learned',
+    game: {
+      type: 'collect',
+      question: 'Гахайнд 5 зоос хийгээрэй!',
+      targetCount: 5,
+      collectIcon: 'PiggyBank',
+    },
   },
   {
     id: 'needs-vs-wants-jr',
@@ -127,6 +148,14 @@ export const juniorMoneyLessons: MoneyLesson[] = [
     content: 'ХЭРЭГТЭЙ зүйлс (Заавал байх ёстой):\n• Хоол - амьдрахын тулд идэх хэрэгтэй\n• Гэр - амрах газартай байх хэрэгтэй\n• Хувцас - дулаан байх хэрэгтэй\n• Сургуулийн хэрэгсэл\n\nХҮСЭМЖ (Байвал сайхан, заавал биш):\n• Шинэ тоглоом\n• Чихэр\n• Тоглоом (game)\n\nМөнгөө зарахдаа эхлээд ХЭРЭГТЭЙ зүйлсийг ав!',
     funFact: 'Ухаалаг хүүхдүүд мөнгөнийхөө 50%-ийг хэрэгтэй зүйлд, 30%-ийг хүсэмжид, 20%-ийг хадгаламжинд хийдэг!',
     badgeId: 'needs-wants-learned',
+    game: {
+      type: 'select',
+      question: 'Аль нь хүнд заавал ХЭРЭГТЭЙ зүйл вэ?',
+      options: [
+        { id: 'opt1', icon: 'Apple', label: 'Хоол', isCorrect: true, color: '#FF9500' },
+        { id: 'opt2', icon: 'Puzzle', label: 'Тоглоом', isCorrect: false, color: '#C084FC' },
+      ],
+    },
   },
   {
     id: 'earning-money-jr',
@@ -138,6 +167,14 @@ export const juniorMoneyLessons: MoneyLesson[] = [
     content: 'Хүүхдүүд ажил хийж мөнгө олж болно!\n\n• Өрөөгөө цэвэрлэх\n• Аяга таваг угаах\n• Нохой гаргах\n• Хичээлээ сайн хийх\n• Цэцэг услах\n\nДаалгавар бүрийг сайн хийвэл:\n• Мөнгө олно\n• Хариуцлагатай болно\n• Эцэг эх баярлана',
     funFact: 'Дэлхийн хамгийн баян хүмүүс бага насандаа жижиг ажлуудаас эхэлсэн!',
     badgeId: 'earning-money-learned',
+    game: {
+      type: 'select',
+      question: 'Даалгавар биелүүлж яаж мөнгө олох вэ?',
+      options: [
+        { id: 'opt1', icon: 'Tv', label: 'Зурагт үзэх', isCorrect: false, color: '#FF3B30' },
+        { id: 'opt2', icon: 'CheckSquare', label: 'Өрөөгөө цэвэрлэх', isCorrect: true, color: '#6C63FF' },
+      ],
+    },
   },
 ];
 

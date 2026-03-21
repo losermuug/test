@@ -28,7 +28,7 @@ export default function ChildProfile() {
   const primaryColor = isJunior ? '#C084FC' : '#0A7EA4';
 
   const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
-  const activeLoans = child.loans.filter(l => l.status === 'active');
+  const activeLoans = child.loans.filter(l => l.status === 'active' || l.status === 'overdue');
   const totalDebt = activeLoans.reduce((sum, l) => sum + (l.totalDue - l.paidAmount), 0);
   const paidLoans = child.loans.filter(l => l.status === 'paid').length;
   const completedTasks = child.tasks.filter(t => t.status === 'approved').length;

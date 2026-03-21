@@ -8,7 +8,7 @@ import StatCard from '@/components/app/StatCard';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   Bell, LogOut, Wallet, Star, BookOpen, Rocket, ShieldCheck, Sparkles, GraduationCap,
-  ArrowDownToLine, X, Send, UserPlus, Baby, Calendar,
+  ArrowDownToLine, X, Send, UserPlus, Baby, Calendar, PiggyBank,
 } from 'lucide-react-native';
 
 const AVATAR_ICONS: Record<string, any> = {
@@ -39,7 +39,7 @@ export default function ParentDashboard() {
   const [childAge, setChildAge] = useState('');
   const [childAvatar, setChildAvatar] = useState('rocket');
 
-  const totalLoans = state.children.reduce((acc, c) => acc + c.loans.filter(l => l.status === 'active').length, 0);
+  const totalLoans = state.children.reduce((acc, c) => acc + c.loans.filter(l => l.status === 'active' || l.status === 'overdue').length, 0);
   const totalTasks = state.children.reduce((acc, c) => acc + c.tasks.filter(t => t.status !== 'approved').length, 0);
   const pendingApprovals = state.children.reduce((acc, c) => acc + c.tasks.filter(t => t.status === 'completed').length, 0);
   const pendingLoanRequests = state.children.reduce((acc, c) => acc + c.loanRequests.filter(r => r.status === 'pending').length, 0);
@@ -334,11 +334,12 @@ export default function ParentDashboard() {
           </View>
 
           {state.children.map(child => {
-            const totalOwed = child.loans.filter(l => l.status === 'active').reduce((s, l) => s + (l.totalDue - l.paidAmount), 0);
+            const totalOwed = child.loans.filter(l => l.status === 'active' || l.status === 'overdue').reduce((s, l) => s + (l.totalDue - l.paidAmount), 0);
             const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
             const childPendingRequests = child.loanRequests.filter(r => r.status === 'pending').length;
             const ageGroupColor = getAgeGroupColor(child.age);
             const ageGroupLabel = getAgeGroupLabel(child.age);
+            const isJunior = getAgeGroup(child.age) === 'junior';
 
             return (
               <View key={child.id} className="bg-white rounded-3xl p-5 mb-3 shadow-sm border border-[#F2F2F7]">
@@ -369,23 +370,39 @@ export default function ParentDashboard() {
                     </View>
                   )}
                 </View>
-
                 <View className="flex-row gap-2 mb-3">
-                  <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
-                    <Wallet size={14} color="#34C759" />
-                    <Text className="text-xs text-[#AEAEB2] mt-1">Хэтэвч</Text>
-                    <Text className="text-sm font-bold text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
-                  </View>
-                  <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
-                    <Wallet size={14} color="#FF3B30" />
-                    <Text className="text-xs text-[#AEAEB2] mt-1">Зээл</Text>
-                    <Text className="text-sm font-bold text-[#FF3B30]">₮{totalOwed.toLocaleString()}</Text>
-                  </View>
-                  <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
-                    <BookOpen size={14} color="#6C63FF" />
-                    <Text className="text-xs text-[#AEAEB2] mt-1">Хичээл</Text>
-                    <Text className="text-sm font-bold text-[#6C63FF]">{child.lessonsCompleted.length}/6</Text>
-                  </View>
+                  {isJunior ? (
+                    <>
+                      <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
+                        <PiggyBank size={14} color="#EC4899" />
+                        <Text className="text-xs text-[#AEAEB2] mt-1">Хадгаламж</Text>
+                        <Text className="text-sm font-bold text-[#EC4899]">₮{child.savings.toLocaleString()}</Text>
+                      </View>
+                      <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
+                        <BookOpen size={14} color="#6C63FF" />
+                        <Text className="text-xs text-[#AEAEB2] mt-1">Хичээл</Text>
+                        <Text className="text-sm font-bold text-[#6C63FF]">{child.lessonsCompleted.length}/6</Text>
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
+                        <Wallet size={14} color="#34C759" />
+                        <Text className="text-xs text-[#AEAEB2] mt-1">Хэтэвч</Text>
+                        <Text className="text-sm font-bold text-[#34C759]">₮{child.balance.toLocaleString()}</Text>
+                      </View>
+                      <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
+                        <Wallet size={14} color="#FF3B30" />
+                        <Text className="text-xs text-[#AEAEB2] mt-1">Зээл</Text>
+                        <Text className="text-sm font-bold text-[#FF3B30]">₮{totalOwed.toLocaleString()}</Text>
+                      </View>
+                      <View className="flex-1 bg-[#F8F8FC] rounded-2xl p-3 items-center">
+                        <BookOpen size={14} color="#6C63FF" />
+                        <Text className="text-xs text-[#AEAEB2] mt-1">Хичээл</Text>
+                        <Text className="text-sm font-bold text-[#6C63FF]">{child.lessonsCompleted.length}/6</Text>
+                      </View>
+                    </>
+                  )}
                 </View>
 
                 {/* Deposit Button */}
@@ -395,7 +412,7 @@ export default function ParentDashboard() {
                   activeOpacity={0.7}
                 >
                   <ArrowDownToLine size={16} color="#34C759" />
-                  <Text className="text-sm font-bold text-[#34C759]">Данс руу цэнэглэх</Text>
+                  <Text className="text-sm font-bold text-[#34C759]">{isJunior ? 'Хадгаламж нэмэх' : 'Данс цэнэглэх'}</Text>
                 </TouchableOpacity>
               </View>
             );

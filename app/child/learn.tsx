@@ -11,11 +11,13 @@ import JuniorBackground from '@/components/app/JuniorBackground';
 import { 
   ArrowLeft, BookOpen, FileQuestion, ChevronLeft, ChevronRight, 
   Star, Trophy, PiggyBank, Heart, Coins, Sparkles, 
-  BadgeDollarSign, Zap, Info, HelpCircle
+  BadgeDollarSign, Zap, Info, HelpCircle,
+  Gamepad2, Banknote, Apple, Puzzle, Tv, CheckSquare
 } from 'lucide-react-native';
 
 const MONEY_ICON_MAP: Record<string, any> = {
-  Coins, PiggyBank, Heart, Star, BookOpen, BadgeDollarSign, Zap, Info, HelpCircle
+  Coins, PiggyBank, Heart, Star, BookOpen, BadgeDollarSign, Zap, Info, HelpCircle,
+  Gamepad2, Banknote, Apple, Puzzle, Tv, CheckSquare
 };
 
 type ViewMode = 'list' | 'lesson' | 'quiz';
@@ -27,6 +29,10 @@ export default function ChildLearn() {
   const [selectedLesson, setSelectedLesson] = useState<typeof lessonsData[0] | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [activeMoneyLesson, setActiveMoneyLesson] = useState<string | null>(null);
+
+  // Gamification state
+  const [collectedCount, setCollectedCount] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   if (!child) return null;
 
@@ -60,8 +66,10 @@ export default function ChildLearn() {
 
   // ─── List ──────────────────────
   if (viewMode === 'list') {
-    const progressPct = (child.lessonsCompleted.filter(id => config.lessonIds.includes(id)).length / availableLessons.length) * 100;
-    const completedCount = child.lessonsCompleted.filter(id => config.lessonIds.includes(id)).length;
+    const juniorCompleted = child.achievements.filter(a => juniorMoneyLessons.some(l => l.badgeId === a.id)).length;
+    const completedCount = isJunior ? juniorCompleted : child.lessonsCompleted.filter(id => config.lessonIds.includes(id)).length;
+    const totalLessons = isJunior ? juniorMoneyLessons.length : availableLessons.length;
+    const progressPct = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
 
     return (
       <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
@@ -72,7 +80,7 @@ export default function ChildLearn() {
               {isJunior ? 'Санхүүгийн хичээл' : isSenior ? 'Санхүүгийн сургалт' : 'Санхүүгийн хичээл'}
             </Text>
             <Text className="text-sm mt-0.5" style={{ color: primaryColor }}>
-              {completedCount}/{availableLessons.length} хичээл дуусгасан
+              {completedCount}/{totalLessons} хичээл дуусгасан
               {isJunior && ' · Badge цуглуул!'}
             </Text>
           </Animated.View>
@@ -123,41 +131,97 @@ export default function ChildLearn() {
                 if (!ml) return null;
                 const done = child.achievements.some(a => a.id === ml.badgeId);
                 const MoneyIcon = MONEY_ICON_MAP[ml.icon] || Coins;
+                const handleSuccess = () => {
+                  setShowSuccessModal(true);
+                  if (!done) {
+                    dispatch({ type: 'UNLOCK_ACHIEVEMENT', childId: child.id, achievementId: ml.badgeId });
+                  }
+                };
+
                 return (
                   <Animated.View entering={FadeInDown.duration(400)}>
                     <View className="bg-white rounded-3xl p-5 border-2" style={{ borderColor: ml.color + '40' }}>
                       <TouchableOpacity
-                        className="w-9 h-9 rounded-full bg-[#F3E8FF] justify-center items-center mb-3"
-                        onPress={() => setActiveMoneyLesson(null)}
+                        className="w-9 h-9 rounded-full bg-[#F3E8FF] justify-center items-center mb-4"
+                        onPress={() => { setActiveMoneyLesson(null); setCollectedCount(0); setShowSuccessModal(false); }}
                       >
                         <ArrowLeft size={16} color="#C084FC" />
                       </TouchableOpacity>
+                      
                       <View className="items-center mb-4">
                         <View className="w-20 h-20 rounded-3xl justify-center items-center mb-3" style={{ backgroundColor: ml.bgColor }}>
                           <MoneyIcon size={40} color={ml.color} />
                         </View>
-                        <Text className="text-xl font-black text-[#1a1a2e] text-center">{ml.title}</Text>
+                        <Text className="text-xl font-black text-[#1a1a2e] text-center mb-1">{ml.title}</Text>
+                        <Text className="text-sm text-[#8E8E93] text-center px-4 leading-5">{ml.content}</Text>
                       </View>
-                      <Text className="text-sm text-[#3C3C43] leading-6 mb-4">{ml.content}</Text>
-                      <View className="rounded-2xl p-4 mb-4" style={{ backgroundColor: ml.bgColor }}>
-                        <Text className="text-xs font-bold mb-1" style={{ color: ml.color }}>Сонирхолтой баримт:</Text>
-                        <Text className="text-xs text-[#3C3C43] leading-5">{ml.funFact}</Text>
-                      </View>
-                      {done ? (
-                        <View className="bg-[#C084FC]/10 rounded-2xl p-3 items-center border border-[#C084FC]/30">
-                          <Text className="text-sm font-black text-[#C084FC]">Badge авсан! ⭐</Text>
+
+                      {ml.game && !done && !showSuccessModal && (
+                        <View className="mt-2 mb-2 p-4 bg-[#F8F8FC] rounded-2xl border border-[#E5E5EA]">
+                          <Text className="text-base font-bold text-[#1a1a2e] text-center mb-4">{ml.game.question}</Text>
+                          
+                          {ml.game.type === 'select' && (
+                            <View className="flex-row gap-3">
+                              {ml.game.options?.map(opt => {
+                                const OptIcon = MONEY_ICON_MAP[opt.icon] || Star;
+                                return (
+                                  <TouchableOpacity
+                                    key={opt.id}
+                                    className="flex-1 bg-white p-4 rounded-2xl items-center shadow-sm border border-[#F2F2F7]"
+                                    onPress={() => {
+                                      if (opt.isCorrect) handleSuccess();
+                                    }}
+                                    activeOpacity={0.7}
+                                  >
+                                    <View className="w-12 h-12 rounded-full items-center justify-center mb-2" style={{ backgroundColor: opt.color + '15' }}>
+                                      <OptIcon size={24} color={opt.color} />
+                                    </View>
+                                    <Text className="text-xs font-bold text-[#1a1a2e] text-center">{opt.label}</Text>
+                                  </TouchableOpacity>
+                                );
+                              })}
+                            </View>
+                          )}
+
+                          {ml.game.type === 'collect' && (
+                            <View className="items-center py-4">
+                              <Text className="text-sm font-bold text-[#8E8E93] mb-4">Цуглуулсан: {collectedCount} / {ml.game.targetCount}</Text>
+                              <TouchableOpacity
+                                className="w-20 h-20 rounded-full bg-[#FFD93D] items-center justify-center shadow-md border-4 border-[#FF9500]"
+                                onPress={() => {
+                                  const next = collectedCount + 1;
+                                  setCollectedCount(next);
+                                  if (next >= (ml.game?.targetCount || 5)) handleSuccess();
+                                }}
+                                activeOpacity={0.6}
+                              >
+                                <Coins size={32} color="#D97706" />
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </View>
-                      ) : (
-                        <TouchableOpacity
-                          className="rounded-2xl py-4 items-center" style={{ backgroundColor: ml.color }}
-                          onPress={() => {
-                            dispatch({ type: 'UNLOCK_ACHIEVEMENT', childId: child.id, achievementId: ml.badgeId });
-                            setActiveMoneyLesson(null);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <Text className="text-white text-base font-black">Badge авах! 🏆</Text>
-                        </TouchableOpacity>
+                      )}
+
+                      {done && !showSuccessModal && (
+                        <View className="bg-[#C084FC]/10 rounded-2xl p-4 items-center border border-[#C084FC]/30 mt-2">
+                          <Text className="text-base font-black text-[#C084FC] mb-2">Badge авсан! ⭐</Text>
+                          <Text className="text-xs text-[#8E8E93] text-center">{ml.funFact}</Text>
+                        </View>
+                      )}
+
+                      {showSuccessModal && (
+                        <Animated.View entering={FadeInDown.duration(400)} className="items-center py-6 bg-[#D1FAE5] rounded-3xl mt-2 border-2 border-[#34C759] shadow-sm">
+                          <Sparkles size={48} color="#10B981" />
+                          <Text className="text-2xl font-black text-[#10B981] mt-4 mb-2">Ямар мундаг юм бэ! 🎉</Text>
+                          <Text className="text-sm font-bold text-[#047857] text-center px-4 mb-4">Чи амжилттай давлаа!</Text>
+                          <TouchableOpacity
+                            className="bg-[#10B981] px-6 py-3 rounded-full flex-row gap-2 items-center"
+                            onPress={() => { setShowSuccessModal(false); setActiveMoneyLesson(null); setCollectedCount(0); }}
+                          >
+                            <Trophy size={18} color="#fff" />
+                            <Text className="text-white font-bold text-base">Үргэлжлүүлэх</Text>
+                          </TouchableOpacity>
+                        </Animated.View>
                       )}
                     </View>
                   </Animated.View>
@@ -197,23 +261,19 @@ export default function ChildLearn() {
           )}
 
           {/* Regular lessons */}
-          <Animated.View entering={FadeInDown.duration(500).delay(isJunior ? 300 : 200)} className="px-6">
-            {isJunior && (
-              <View className="flex-row items-center gap-2 mb-3">
-                <BookOpen size={20} color="#1a1a2e" />
-                <Text className="text-lg font-black text-[#1a1a2e]">Санхүүгийн хичээл</Text>
-              </View>
-            )}
-            {availableLessons.map((lesson, i) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                isCompleted={child.lessonsCompleted.includes(lesson.id)}
-                onPress={() => openLesson(lesson)}
-                index={i}
-              />
-            ))}
-          </Animated.View>
+          {!isJunior && (
+            <Animated.View entering={FadeInDown.duration(500).delay(200)} className="px-6">
+              {availableLessons.map((lesson, i) => (
+                <LessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  isCompleted={child.lessonsCompleted.includes(lesson.id)}
+                  onPress={() => openLesson(lesson)}
+                  index={i}
+                />
+              ))}
+            </Animated.View>
+          )}
         </ScrollView>
       </SafeAreaView>
     );

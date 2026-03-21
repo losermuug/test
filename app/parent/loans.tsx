@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import LoanCard from '@/components/app/LoanCard';
@@ -18,10 +18,14 @@ const AVATAR_ICONS: Record<string, any> = {
 export default function ParentLoans() {
   const { state, dispatch } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(state.children[0]?.id || '');
+  const [selectedChild, setSelectedChild] = useState(state.children.find(c => c.age >= 10)?.id || '');
   const [amount, setAmount] = useState('');
   const [interestRate, setInterestRate] = useState('10');
   const [dueDays, setDueDays] = useState('7');
+
+  // Request Approval Modal State
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [approveInterest, setApproveInterest] = useState('10');
 
   const childObj = state.children.find(c => c.id === selectedChild);
   const isJuniorSelected = childObj && childObj.age <= 9;
@@ -44,34 +48,32 @@ export default function ParentLoans() {
       return;
     }
     const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + parseInt(dueDays));
-    dispatch({ type: 'CREATE_LOAN', childId: selectedChild, amount: amountNum, interestRate: currentInterestRate, dueDate: dueDate.toISOString() });
+    const days = parseInt(dueDays) || 0;
+    dueDate.setDate(dueDate.getDate() + days);
+    dispatch({ type: 'CREATE_LOAN', childId: selectedChild, amount: amountNum, interestRate: currentInterestRate, dueDays: days, dueDate: dueDate.toISOString() });
     setAmount('');
     setShowForm(false);
     Alert.alert('Амжилттай', `₮${amountNum.toLocaleString()} зээл үүсгэлээ!`);
   };
 
-  const handleApproveRequest = (childId: string, requestId: string, requestAmount: number, reqInterest: number) => {
-    Alert.alert(
-      'Зээл зөвшөөрөх',
-      `₮${requestAmount.toLocaleString()} зээл зөвшөөрөх үү?\n\nХүү: ${reqInterest}% | Хугацаа: 7 хоног`,
-      [
-        { text: 'Болих', style: 'cancel' },
-        {
-          text: 'Зөвшөөрөх',
-          onPress: () => {
-            dispatch({
-              type: 'APPROVE_LOAN_REQUEST',
-              childId,
-              requestId,
-              interestRate: reqInterest,
-              dueDays: 7,
-            });
-            Alert.alert('Амжилттай', 'Зээл зөвшөөрөгдлөө! Хүүхдийн данс руу мөнгө орлоо.');
-          },
-        },
-      ]
-    );
+  const openApproveModal = (req: any, defaultInterest: number) => {
+    setSelectedRequest(req);
+    setApproveInterest(defaultInterest.toString());
+  };
+
+  const confirmApproveRequest = () => {
+    if (!selectedRequest) return;
+    const finalInterest = parseFloat(approveInterest) || 0;
+    dispatch({
+      type: 'APPROVE_LOAN_REQUEST',
+      childId: selectedRequest.childId,
+      requestId: selectedRequest.id,
+      interestRate: finalInterest,
+      dueDays: selectedRequest.dueDays || 14,
+      installments: selectedRequest.installments || 1,
+    });
+    setSelectedRequest(null);
+    Alert.alert('Амжилттай', 'Зээл зөвшөөрөгдлөө! Хүүхдийн данс руу мөнгө орлоо.');
   };
 
   const handleRejectRequest = (childId: string, requestId: string) => {
@@ -98,6 +100,69 @@ export default function ParentLoans() {
 
   return (
     <SafeAreaView className="flex-1 bg-[#F8F8FC]">
+      {/* Approve Request Modal */}
+      <Modal visible={!!selectedRequest} transparent animationType="slide" onRequestClose={() => setSelectedRequest(null)}>
+        <TouchableWithoutFeedback onPress={() => setSelectedRequest(null)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                <View className="bg-white rounded-t-3xl p-6 pb-10">
+                  <View className="flex-row justify-between items-center mb-6">
+                    <Text className="text-xl font-black text-[#1a1a2e]">Зээл зөвшөөрөх</Text>
+                    <TouchableOpacity onPress={() => setSelectedRequest(null)}>
+                      <X size={24} color="#AEAEB2" />
+                    </TouchableOpacity>
+                  </View>
+
+                  {selectedRequest && (
+                    <>
+                      <View className="bg-[#F8F8FC] rounded-2xl p-4 mb-4">
+                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Хүссэн дүн</Text>
+                        <Text className="text-2xl font-black text-[#1a1a2e]">₮{selectedRequest.amount.toLocaleString()}</Text>
+                        
+                        <View className="w-full h-[1px] bg-[#E5E5EA] my-3" />
+                        
+                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Зорилго</Text>
+                        <Text className="text-sm font-semibold text-[#1a1a2e]">{selectedRequest.purpose}</Text>
+
+                        <View className="w-full h-[1px] bg-[#E5E5EA] my-3" />
+                        
+                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Хугацаа ба Төлөлт</Text>
+                        <Text className="text-sm font-semibold text-[#1a1a2e]">
+                          {selectedRequest.dueDays || 14} хоног · {selectedRequest.installments || 1} хувааж
+                        </Text>
+                      </View>
+
+                      <View className="flex-row items-center gap-2 mb-2">
+                        <Percent size={14} color="#8E8E93" />
+                        <Text className="text-sm font-semibold text-[#8E8E93]">Сарын хүү (%)</Text>
+                      </View>
+                      <TextInput
+                        className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-6 border border-[#F2F2F7]"
+                        value={approveInterest}
+                        onChangeText={setApproveInterest}
+                        keyboardType="decimal-pad"
+                        placeholder="Жишээ нь: 5 эсвэл 3.5"
+                        placeholderTextColor="#C7C7CC"
+                      />
+
+                      <TouchableOpacity
+                        className="bg-[#34C759] rounded-2xl py-4 items-center flex-row justify-center gap-2"
+                        onPress={confirmApproveRequest}
+                        activeOpacity={0.7}
+                      >
+                        <CheckCircle size={18} color="#fff" />
+                        <Text className="text-white font-bold text-base">Батлах</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+              </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2 flex-row justify-between items-center">
           <View>
@@ -118,33 +183,33 @@ export default function ParentLoans() {
           <Animated.View entering={FadeInDown.duration(400)} className="mx-6 bg-white rounded-3xl p-5 mb-4 shadow-sm border border-[#6C63FF]/10">
             <Text className="text-lg font-bold text-[#1a1a2e] mb-4">Шинэ зээл</Text>
 
-            <Text className="text-sm font-semibold text-[#8E8E93] mb-2">Хүүхэд</Text>
-            <View className="flex-row gap-2 mb-4">
-              {state.children.map(child => {
-                const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
-                return (
-                  <TouchableOpacity
-                    key={child.id}
-                    className={`flex-1 p-3 rounded-2xl border-2 items-center ${
-                      selectedChild === child.id ? 'border-[#6C63FF] bg-[#6C63FF]/5' : 'border-[#F2F2F7]'
-                    }`}
-                    onPress={() => setSelectedChild(child.id)}
-                  >
-                    <AvatarIcon size={24} color={selectedChild === child.id ? '#6C63FF' : '#C7C7CC'} />
-                    <Text className={`text-sm font-semibold mt-1 ${selectedChild === child.id ? 'text-[#6C63FF]' : 'text-[#AEAEB2]'}`}>
-                      {child.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {isJuniorSelected ? (
+            {state.children.filter(c => c.age >= 10).length === 0 ? (
               <View className="bg-[#FF3B30]/10 p-4 rounded-2xl items-center mb-4 border border-[#FF3B30]/20">
-                <Text className="text-sm font-bold text-[#FF3B30] text-center">Junior насны хүүхэд зээл авах боломжгүй бөгөөд зөвхөн хадгаламж үүсгэх зориулалттай.</Text>
+                <Text className="text-sm font-bold text-[#FF3B30] text-center">Зээл авах боломжтой (10-аас дээш насны) хүүхэд байхгүй байна.</Text>
               </View>
             ) : (
               <>
+                <Text className="text-sm font-semibold text-[#8E8E93] mb-2">Хүүхэд</Text>
+                <View className="flex-row gap-2 mb-4">
+                  {state.children.filter(c => c.age >= 10).map(child => {
+                    const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
+                    return (
+                      <TouchableOpacity
+                        key={child.id}
+                        className={`flex-1 p-3 rounded-2xl border-2 items-center ${
+                          selectedChild === child.id ? 'border-[#6C63FF] bg-[#6C63FF]/5' : 'border-[#F2F2F7]'
+                        }`}
+                        onPress={() => setSelectedChild(child.id)}
+                      >
+                        <AvatarIcon size={24} color={selectedChild === child.id ? '#6C63FF' : '#C7C7CC'} />
+                        <Text className={`text-sm font-semibold mt-1 ${selectedChild === child.id ? 'text-[#6C63FF]' : 'text-[#AEAEB2]'}`}>
+                          {child.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
                 <View className="flex-row items-center gap-2 mb-2">
                   <Wallet size={14} color="#8E8E93" />
                   <Text className="text-sm font-semibold text-[#8E8E93]">Зээлийн дүн (₮)</Text>
@@ -172,47 +237,45 @@ export default function ParentLoans() {
                       className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-3 border border-[#F2F2F7]"
                       value={interestRate}
                       onChangeText={setInterestRate}
-                      keyboardType="number-pad"
+                      keyboardType="decimal-pad"
                       placeholder="Жишээ нь: 5"
                       placeholderTextColor="#C7C7CC"
                     />
                   </>
                 )}
-              </>
-            )}
 
-            <View className="flex-row items-center gap-2 mb-2">
-              <Calendar size={14} color="#8E8E93" />
-              <Text className="text-sm font-semibold text-[#8E8E93]">Хугацаа</Text>
-            </View>
-            <View className="flex-row gap-2 mb-4">
-              {['3', '7', '14', '30'].map(days => (
-                <TouchableOpacity
-                  key={days}
-                  className={`flex-1 py-3 rounded-2xl items-center ${dueDays === days ? 'bg-[#4ECDC4]' : 'bg-[#F8F8FC]'}`}
-                  onPress={() => setDueDays(days)}
-                >
-                  <Text className={`font-bold ${dueDays === days ? 'text-white' : 'text-[#8E8E93]'}`}>{days}д</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {(!isJuniorSelected && amount) ? (
-              <View className="bg-[#6C63FF]/5 rounded-2xl p-4 mb-4 flex-row items-center gap-3 border border-[#6C63FF]/10">
-                <Calculator size={18} color="#6C63FF" />
-                <View>
-                  <Text className="text-xs text-[#6C63FF] font-semibold">Тооцоолол</Text>
-                  <Text className="text-sm text-[#1a1a2e]">
-                    ₮{parseInt(amount || '0').toLocaleString()} + ₮{Math.round(parseInt(amount || '0') * currentInterestRate / 100).toLocaleString()} = <Text className="font-bold">₮{Math.round(parseInt(amount || '0') * (1 + currentInterestRate / 100)).toLocaleString()}</Text>
-                  </Text>
+                <View className="flex-row items-center gap-2 mb-2">
+                  <Calendar size={14} color="#8E8E93" />
+                  <Text className="text-sm font-semibold text-[#8E8E93]">Хугацаа</Text>
                 </View>
-              </View>
-            ) : null}
+                <View className="flex-row gap-2 mb-4">
+                  {['3', '7', '14', '30'].map(days => (
+                    <TouchableOpacity
+                      key={days}
+                      className={`flex-1 py-3 rounded-2xl items-center ${dueDays === days ? 'bg-[#4ECDC4]' : 'bg-[#F8F8FC]'}`}
+                      onPress={() => setDueDays(days)}
+                    >
+                      <Text className={`font-bold ${dueDays === days ? 'text-white' : 'text-[#8E8E93]'}`}>{days}д</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-            {!isJuniorSelected && (
-              <TouchableOpacity className="bg-[#6C63FF] rounded-2xl py-4 items-center" onPress={handleCreateLoan} activeOpacity={0.7}>
-                <Text className="text-white text-base font-bold">Зээл үүсгэх</Text>
-              </TouchableOpacity>
+                {amount ? (
+                  <View className="bg-[#6C63FF]/5 rounded-2xl p-4 mb-4 flex-row items-center gap-3 border border-[#6C63FF]/10">
+                    <Calculator size={18} color="#6C63FF" />
+                    <View>
+                      <Text className="text-xs text-[#6C63FF] font-semibold">Тооцоолол</Text>
+                      <Text className="text-sm text-[#1a1a2e]">
+                        ₮{parseInt(amount || '0').toLocaleString()} + ₮{Math.round(parseInt(amount || '0') * (currentInterestRate / 100) * (parseInt(dueDays) / 30)).toLocaleString()} = <Text className="font-bold">₮{Math.round(parseInt(amount || '0') * (1 + (currentInterestRate / 100) * (parseInt(dueDays) / 30))).toLocaleString()}</Text>
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                <TouchableOpacity className="bg-[#6C63FF] rounded-2xl py-4 items-center" onPress={handleCreateLoan} activeOpacity={0.7}>
+                  <Text className="text-white text-base font-bold">Зээл үүсгэх</Text>
+                </TouchableOpacity>
+              </>
             )}
           </Animated.View>
         )}
@@ -270,7 +333,7 @@ export default function ParentLoans() {
                   <View className="flex-row gap-2">
                     <TouchableOpacity
                       className="flex-1 bg-[#34C759] rounded-2xl py-3.5 items-center flex-row justify-center gap-2"
-                      onPress={() => handleApproveRequest(req.childId, req.id, req.amount, reqInterest)}
+                      onPress={() => openApproveModal(req, reqInterest)}
                       activeOpacity={0.7}
                     >
                       <CheckCircle size={18} color="#fff" />

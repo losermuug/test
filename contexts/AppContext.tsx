@@ -29,6 +29,7 @@ export interface Loan {
   interestRate: number;
   totalDue: number;
   paidAmount: number;
+  installments?: number;
   createdAt: string;
   dueDate: string;
   status: 'active' | 'paid' | 'overdue';
@@ -39,6 +40,8 @@ export interface LoanRequest {
   childId: string;
   amount: number;
   purpose: string;
+  dueDays?: number;
+  installments?: number;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   respondedAt?: string;
@@ -107,10 +110,10 @@ type Action =
   | { type: 'WITHDRAW'; childId: string; amount: number }
   | { type: 'ADD_TO_SAVINGS'; childId: string; amount: number }
   | { type: 'WITHDRAW_FROM_SAVINGS'; childId: string; amount: number }
-  | { type: 'CREATE_LOAN'; childId: string; amount: number; interestRate: number; dueDate: string }
+  | { type: 'CREATE_LOAN'; childId: string; amount: number; interestRate: number; dueDays: number; installments?: number; dueDate: string }
   | { type: 'REPAY_LOAN'; childId: string; loanId: string; amount: number }
-  | { type: 'REQUEST_LOAN'; childId: string; amount: number; purpose: string }
-  | { type: 'APPROVE_LOAN_REQUEST'; childId: string; requestId: string; interestRate: number; dueDays: number }
+  | { type: 'REQUEST_LOAN'; childId: string; amount: number; purpose: string; dueDays?: number; installments?: number }
+  | { type: 'APPROVE_LOAN_REQUEST'; childId: string; requestId: string; interestRate: number; dueDays: number; installments?: number }
   | { type: 'REJECT_LOAN_REQUEST'; childId: string; requestId: string }
   | { type: 'CREATE_TASK'; childId: string; title: string; description: string; reward: number }
   | { type: 'COMPLETE_TASK'; childId: string; taskId: string }
@@ -273,7 +276,7 @@ function appReducer(state: AppState, action: Action): AppState {
     }
 
     case 'CREATE_LOAN': {
-      const interest = action.amount * (action.interestRate / 100);
+      const interest = action.amount * (action.interestRate / 100) * (action.dueDays / 30);
       const newLoan: Loan = {
         id: generateId(),
         childId: action.childId,
@@ -281,6 +284,7 @@ function appReducer(state: AppState, action: Action): AppState {
         interestRate: action.interestRate,
         totalDue: action.amount + interest,
         paidAmount: 0,
+        installments: action.installments || 1,
         createdAt: new Date().toISOString(),
         dueDate: action.dueDate,
         status: 'active',
@@ -304,6 +308,8 @@ function appReducer(state: AppState, action: Action): AppState {
         childId: action.childId,
         amount: action.amount,
         purpose: action.purpose,
+        dueDays: action.dueDays,
+        installments: action.installments,
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
@@ -322,7 +328,7 @@ function appReducer(state: AppState, action: Action): AppState {
         children: updateChildInList(state.children, action.childId, child => {
           const request = child.loanRequests.find(r => r.id === action.requestId);
           if (!request) return child;
-          const interest = request.amount * (action.interestRate / 100);
+          const interest = request.amount * (action.interestRate / 100) * (action.dueDays / 30);
           const dueDate = new Date();
           dueDate.setDate(dueDate.getDate() + action.dueDays);
           const newLoan: Loan = {
@@ -332,6 +338,7 @@ function appReducer(state: AppState, action: Action): AppState {
             interestRate: action.interestRate,
             totalDue: request.amount + interest,
             paidAmount: 0,
+            installments: action.installments || request.installments || 1,
             createdAt: new Date().toISOString(),
             dueDate: dueDate.toISOString(),
             status: 'active',
@@ -495,8 +502,8 @@ const initialState: AppState = {
   users: [
     { id: 'parent-1', name: 'Ээж', pin: '0000', role: 'parent', avatar: 'shield' },
     { id: 'child-1', name: 'Болд', pin: '0000', role: 'child', avatar: 'rocket', age: 12 },
-    { id: 'child-2', name: 'Сарнай', pin: '0000', role: 'child', avatar: 'star', age: 8 },
-    { id: 'child-3', name: 'Бат', pin: '0000', role: 'child', avatar: 'star', age:17 },
+    { id: 'child-2', name: 'Сарнай', pin: '0000', role: 'child', avatar: 'sparkle', age: 8 },
+    { id: 'child-3', name: 'Бат', pin: '0000', role: 'child', avatar: 'graduate', age: 17 },
   ],
   children: [
     {
@@ -504,30 +511,88 @@ const initialState: AppState = {
       name: 'Болд',
       age: 12,
       avatar: 'rocket',
-      balance: 0,
+      balance: 15000,
       savings: 0,
-      loans: [],
+      loans: [
+        {
+          id: 'loan-1',
+          childId: 'child-1',
+          amount: 5000,
+          interestRate: 0,
+          totalDue: 5000,
+          paidAmount: 1500,
+          createdAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+          dueDate: new Date(Date.now() + 4 * 86400000).toISOString(),
+          status: 'active',
+        },
+        {
+          id: 'loan-3',
+          childId: 'child-1',
+          amount: 2000,
+          interestRate: 0,
+          totalDue: 2000,
+          paidAmount: 0,
+          createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+          dueDate: new Date(Date.now() - 3 * 86400000).toISOString(),
+          status: 'overdue',
+        }
+      ],
       loanRequests: [],
-      tasks: [],
-      achievements: [],
-      lessonsCompleted: [],
-      streak: 0,
+      tasks: [
+        {
+          id: 'task-1',
+          childId: 'child-1',
+          title: 'Өрөөгөө цэвэрлэх',
+          description: 'Тоглоом хувцсаа хураах',
+          reward: 2000,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'task-2',
+          childId: 'child-1',
+          title: 'Хог хаях',
+          description: 'Хог гаргаж хаях',
+          reward: 1000,
+          status: 'completed',
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          completedAt: new Date().toISOString()
+        }
+      ],
+      achievements: [
+        { id: 'first_login', unlockedAt: new Date().toISOString() },
+        { id: 'first_task', unlockedAt: new Date().toISOString() }
+      ],
+      lessonsCompleted: ['l1'],
+      streak: 3,
       lastActiveDate: new Date().toISOString(),
-      creditScore: 3,
+      creditScore: 4,
     },
     {
       id: 'child-2',
       name: 'Сарнай',
       age: 8,
-      avatar: 'star',
-      balance: 0,
-      savings: 0,
+      avatar: 'sparkle',
+      balance: 1500,
+      savings: 12000,
       loans: [],
       loanRequests: [],
-      tasks: [],
-      achievements: [],
+      tasks: [
+        {
+          id: 'task-3',
+          childId: 'child-2',
+          title: 'Шүдээ угаах',
+          description: 'Орой унтахын өмнө шүдээ угаах',
+          reward: 500,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+      ],
+      achievements: [
+        { id: 'first_login', unlockedAt: new Date().toISOString() }
+      ],
       lessonsCompleted: [],
-      streak: 0,
+      streak: 5,
       lastActiveDate: new Date().toISOString(),
       creditScore: 3,
     },
@@ -535,17 +600,62 @@ const initialState: AppState = {
       id: 'child-3',
       name: 'Бат',
       age: 17,
-      avatar: 'star',
-      balance: 0,
-      savings: 0,
-      loans: [],
-      loanRequests: [],
-      tasks: [],
-      achievements: [],
-      lessonsCompleted: [],
-      streak: 0,
+      avatar: 'graduate',
+      balance: 32000,
+      savings: 5000,
+      loans: [
+        {
+          id: 'loan-2',
+          childId: 'child-3',
+          amount: 20000,
+          interestRate: 5,
+          totalDue: 21000,
+          paidAmount: 5000,
+          createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+          dueDate: new Date(Date.now() + 2 * 86400000).toISOString(),
+          status: 'active',
+        },
+        {
+          id: 'loan-4',
+          childId: 'child-3',
+          amount: 10000,
+          interestRate: 5,
+          totalDue: 10500,
+          paidAmount: 10500,
+          createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+          dueDate: new Date(Date.now() - 20 * 86400000).toISOString(),
+          status: 'paid',
+        }
+      ],
+      loanRequests: [
+        {
+          id: 'req-1',
+          childId: 'child-3',
+          amount: 15000,
+          purpose: 'Ном авах',
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        }
+      ],
+      tasks: [
+        {
+          id: 'task-4',
+          childId: 'child-3',
+          title: 'Дүүдээ хичээл заах',
+          description: 'Математикийн даалгаварт нь туслах',
+          reward: 5000,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        }
+      ],
+      achievements: [
+        { id: 'first_login', unlockedAt: new Date().toISOString() },
+        { id: 'first_loan', unlockedAt: new Date().toISOString() }
+      ],
+      lessonsCompleted: ['l1', 'l2', 'l3'],
+      streak: 12,
       lastActiveDate: new Date().toISOString(),
-      creditScore: 3,
+      creditScore: 5,
     },
   ],
   isLoaded: false,
@@ -553,7 +663,7 @@ const initialState: AppState = {
 
 // ─── Context ─────────────────────────────────────────────────
 
-const STORAGE_KEY = '@moneymii_state_v2';
+const STORAGE_KEY = '@moneymii_state_v4';
 
 interface AppContextType {
   state: AppState;

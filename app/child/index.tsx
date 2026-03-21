@@ -160,7 +160,7 @@ export default function ChildDashboard() {
   const isJunior = ageGroup === 'junior';
   const isSenior = ageGroup === 'senior';
 
-  const activeLoans = child.loans.filter(l => l.status === 'active');
+  const activeLoans = child.loans.filter(l => l.status === 'active' || l.status === 'overdue');
   const totalDebt = activeLoans.reduce((sum, l) => sum + (l.totalDue - l.paidAmount), 0);
   const pendingTasks = child.tasks.filter(t => t.status === 'pending').length;
   const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
@@ -328,7 +328,7 @@ export default function ChildDashboard() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}
               style={{ marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
-              {achievementsData.slice(0, 8).map((ach, i) => {
+              {achievementsData.map((ach, i) => {
                 const unlocked = (child?.achievements || []).some(a => a.id === ach.id);
                 const s = STICKERS_JUNIOR[i % STICKERS_JUNIOR.length];
                 return (
@@ -514,7 +514,7 @@ export default function ChildDashboard() {
               <Text style={{ fontSize: 11, color: '#6B7280', fontWeight: '600' }}>{child.achievements.length}/{achievementsData.length}</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
-              {achievementsData.slice(0, 8).map((ach, i) => {
+              {achievementsData.map((ach, i) => {
                 const unlocked = child.achievements.some(a => a.id === ach.id);
                 const s = STICKERS_SENIOR[i % STICKERS_SENIOR.length];
                 return (
@@ -675,7 +675,7 @@ export default function ChildDashboard() {
             </View>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}>
-            {achievementsData.slice(0, 8).map((ach, i) => {
+            {achievementsData.map((ach, i) => {
               const unlocked = child.achievements.some(a => a.id === ach.id);
               const s = STICKERS_TEEN[i % STICKERS_TEEN.length];
               return (

@@ -1,9 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StatusBar, Dimensions, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StatusBar,
+  Dimensions,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Image,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { useApp } from '@/contexts/AppContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeInUp, BounceIn } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import {
   Wallet,
   GraduationCap,
@@ -15,33 +26,216 @@ import {
   ArrowRight,
   Sparkles,
   UserPlus,
+  ChevronLeft,
+  Heart,
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
+// ── Brand tokens ──────────────────────────────────────────
+const C = {
+  cream:    '#FDF8F2',      // page background
+  surface:  '#FFFFFF',      // cards
+  border:   '#EDE8DF',      // subtle borders
+  textPrimary:   '#1A1612',
+  textSecondary: '#8C7B6E',
+  textHint:      '#BDB0A4',
+
+  // Accent palette — warm & friendly
+  indigo:   '#5B4FCF',      // primary action
+  indigoSoft:'#EEE9FF',
+  mint:     '#2DB896',      // child accent
+  mintSoft: '#E5F8F3',
+  peach:    '#F97048',      // parent accent
+  peachSoft:'#FFF0EB',
+  amber:    '#F5A623',
+  amberSoft:'#FFF8E6',
+  rose:     '#E85F8A',
+  roseSoft: '#FEF0F5',
+  teal:     '#26A69A',
+  tealSoft: '#E0F7F4',
+};
+
+// Avatar configs
 const AVATARS = [
-  { key: 'rocket', Icon: Rocket, color: '#FF6B6B' },
-  { key: 'star', Icon: Star, color: '#FFD93D' },
-  { key: 'shield', Icon: ShieldCheck, color: '#6C63FF' },
-  { key: 'sparkle', Icon: Sparkles, color: '#4ECDC4' },
-  { key: 'graduate', Icon: GraduationCap, color: '#FF9500' },
+  { key: 'rocket',   Icon: Rocket,        color: C.peach,  softColor: C.peachSoft },
+  { key: 'star',     Icon: Star,          color: C.amber,  softColor: C.amberSoft },
+  { key: 'shield',   Icon: ShieldCheck,   color: C.indigo, softColor: C.indigoSoft },
+  { key: 'sparkle',  Icon: Sparkles,      color: C.mint,   softColor: C.mintSoft },
+  { key: 'graduate', Icon: GraduationCap, color: C.rose,   softColor: C.roseSoft },
 ];
 
+// ── Shared UI primitives ──────────────────────────────────
+const Pill = ({
+  label,
+  active,
+  color = C.indigo,
+  softColor = C.indigoSoft,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  color?: string;
+  softColor?: string;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.75}
+    style={{
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 14,
+      alignItems: 'center',
+      backgroundColor: active ? softColor : C.surface,
+      borderWidth: 1.5,
+      borderColor: active ? color : C.border,
+    }}
+  >
+    <Text style={{ fontSize: 14, fontWeight: '700', color: active ? color : C.textSecondary }}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+const PrimaryButton = ({
+  label,
+  onPress,
+  disabled,
+  icon,
+  color = C.indigo,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  icon?: React.ReactNode;
+  color?: string;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    disabled={disabled}
+    activeOpacity={0.85}
+    style={{
+      backgroundColor: disabled ? C.border : color,
+      borderRadius: 18,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    }}
+  >
+    {icon}
+    <Text style={{ color: disabled ? C.textHint : '#FFF', fontSize: 16, fontWeight: '700' }}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+const GhostButton = ({
+  label,
+  onPress,
+  icon,
+}: {
+  label: string;
+  onPress: () => void;
+  icon?: React.ReactNode;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.75}
+    style={{
+      borderWidth: 1.5,
+      borderColor: C.border,
+      borderRadius: 18,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: C.surface,
+    }}
+  >
+    {icon}
+    <Text style={{ color: C.textPrimary, fontSize: 16, fontWeight: '700' }}>{label}</Text>
+  </TouchableOpacity>
+);
+
+const SectionLabel = ({ children }: { children: string }) => (
+  <Text style={{ fontSize: 12, fontWeight: '600', color: C.textSecondary, letterSpacing: 0.8, marginBottom: 8 }}>
+    {children.toUpperCase()}
+  </Text>
+);
+
+const FloatingInput = ({
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  maxLength,
+  secureTextEntry,
+  autoFocus,
+  center,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  keyboardType?: any;
+  maxLength?: number;
+  secureTextEntry?: boolean;
+  autoFocus?: boolean;
+  center?: boolean;
+}) => (
+  <TextInput
+    value={value}
+    onChangeText={onChangeText}
+    placeholder={placeholder}
+    placeholderTextColor={C.textHint}
+    keyboardType={keyboardType}
+    maxLength={maxLength}
+    secureTextEntry={secureTextEntry}
+    autoFocus={autoFocus}
+    style={{
+      backgroundColor: C.surface,
+      borderWidth: 1.5,
+      borderColor: C.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      color: C.textPrimary,
+      textAlign: center ? 'center' : 'left',
+      letterSpacing: secureTextEntry ? 8 : 0,
+    }}
+  />
+);
+
+// ── Helper ────────────────────────────────────────────────
+const getAvatarIcon = (avatarKey: string, size = 24, color = '#fff') => {
+  const av = AVATARS.find(a => a.key === avatarKey);
+  if (!av) return <User size={size} color={color} />;
+  return <av.Icon size={size} color={color} />;
+};
+
+// ══════════════════════════════════════════════════════════
 export default function LoginScreen() {
   const router = useRouter();
   const { state, dispatch } = useApp();
   const [mode, setMode] = useState<'welcome' | 'login' | 'register'>('welcome');
+
+  // Login state
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
 
-  // Register fields
-  const [regName, setRegName] = useState('');
-  const [regPin, setRegPin] = useState('');
-  const [regRole, setRegRole] = useState<'parent' | 'child'>('child');
+  // Register state
+  const [regName, setRegName]   = useState('');
+  const [regPin, setRegPin]     = useState('');
+  const [regRole, setRegRole]   = useState<'parent' | 'child'>('child');
   const [regAvatar, setRegAvatar] = useState('rocket');
-  const [regAge, setRegAge] = useState('');
+  const [regAge, setRegAge]     = useState('');
 
+  // ── Handlers ────────────────────────────────────────────
   const handleLogin = () => {
     const user = state.users.find(u => u.id === selectedUser);
     if (!user) return;
@@ -80,7 +274,6 @@ export default function LoginScreen() {
       avatar: regAvatar,
       age: regRole === 'child' ? parseInt(regAge) : undefined,
     });
-    // After register, navigate
     if (regRole === 'child') {
       router.replace('/child' as any);
     } else {
@@ -88,171 +281,229 @@ export default function LoginScreen() {
     }
   };
 
-  const getAvatarIcon = (avatarKey: string, size = 28, color = '#fff') => {
-    const avatar = AVATARS.find(a => a.key === avatarKey);
-    if (!avatar) return <User size={size} color={color} />;
-    return <avatar.Icon size={size} color={color} />;
+  const resetAndBack = () => {
+    setMode('welcome');
+    setSelectedUser(null);
+    setPin('');
+    setError('');
   };
 
-  // ─── Welcome Screen ───────────────────
+  // ╔══════════════════════════════════════════════════════╗
+  // ║  WELCOME                                             ║
+  // ╚══════════════════════════════════════════════════════╝
   if (mode === 'welcome') {
     return (
-      <View className="flex-1 bg-[#0B0B1E]">
-        <StatusBar barStyle="light-content" />
-        {/* Gradient blobs */}
-        <View className="absolute w-80 h-80 rounded-full bg-[#6C63FF]/20 -top-20 -right-16" />
-        <View className="absolute w-60 h-60 rounded-full bg-[#4ECDC4]/15 bottom-40 -left-10" />
-        <View className="absolute w-40 h-40 rounded-full bg-[#FF6B6B]/15 bottom-10 right-8" />
+      <View style={{ flex: 1, backgroundColor: C.cream }}>
+        <StatusBar barStyle="dark-content" backgroundColor={C.cream} />
 
-        <SafeAreaView className="flex-1 px-6 justify-between pt-8 pb-6">
-          <Animated.View entering={FadeInUp.duration(800)} className="items-center mt-8">
-            <View className="w-20 h-20 rounded-3xl bg-[#6C63FF] justify-center items-center mb-4 shadow-lg">
-              <Wallet size={40} color="#fff" />
-            </View>
-            <Text className="text-4xl font-black text-white tracking-widest">MoneyMii</Text>
-            <Text className="text-base text-white/50 mt-2 text-center">
-              Хүүхдийн санхүүгийн{'\n'}ухаалаг боловсрол
+        {/* Decorative blobs — soft, pastel */}
+        <View style={{
+          position: 'absolute', width: 260, height: 260, borderRadius: 130,
+          backgroundColor: C.indigoSoft, top: -80, right: -60, opacity: 0.6,
+        }} />
+        <View style={{
+          position: 'absolute', width: 180, height: 180, borderRadius: 90,
+          backgroundColor: C.mintSoft, bottom: 160, left: -40, opacity: 0.7,
+        }} />
+        <View style={{
+          position: 'absolute', width: 120, height: 120, borderRadius: 60,
+          backgroundColor: C.peachSoft, bottom: 60, right: 24, opacity: 0.6,
+        }} />
+
+        <SafeAreaView style={{ flex: 1, paddingHorizontal: 28, justifyContent: 'space-between', paddingTop: 32, paddingBottom: 36 }}>
+
+          {/* Hero */}
+          <Animated.View entering={FadeInUp.duration(700)} style={{ alignItems: 'center', marginTop: 40 }}>
+            <Image 
+              source={require('../assets/images/Logo.png')} 
+              style={{
+                width: width * 0.85,
+                height: width * 0.85,
+                marginBottom: -width * 0.3, // Pull text even closer
+                shadowColor: C.indigo,
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.2,
+                shadowRadius: 15,
+              }}
+              resizeMode="contain"
+            />
+
+            <Text style={{ fontSize: 36, fontWeight: '800', color: C.textPrimary, letterSpacing: -1 }}>
+              FINLOX
             </Text>
+
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.duration(800).delay(300)} className="gap-4">
-            <TouchableOpacity
-              className="bg-[#6C63FF] rounded-2xl py-5 flex-row items-center justify-center gap-3"
+          {/* CTA buttons */}
+          <Animated.View entering={FadeInDown.duration(700).delay(300)} style={{ gap: 12 }}>
+            <PrimaryButton
+              label="Нэвтрэх"
               onPress={() => setMode('login')}
-              activeOpacity={0.8}
-            >
-              <Lock size={20} color="#fff" />
-              <Text className="text-white text-lg font-bold">Нэвтрэх</Text>
-              <ArrowRight size={20} color="#fff" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-white/10 rounded-2xl py-5 flex-row items-center justify-center gap-3 border border-white/10"
+              icon={<Lock size={18} color="#fff" />}
+            />
+            <GhostButton
+              label="Шинэ хэрэглэгч үүсгэх"
               onPress={() => setMode('register')}
-              activeOpacity={0.8}
-            >
-              <UserPlus size={20} color="#fff" />
-              <Text className="text-white text-lg font-bold">Бүртгүүлэх</Text>
-            </TouchableOpacity>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.duration(600).delay(600)}>
-            <Text className="text-center text-white/30 text-xs">
-              Санхүүгийн зөв дадлыг бага наснаас нь эхлэе
-            </Text>
+              icon={<UserPlus size={18} color={C.textPrimary} />}
+            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 4 }}>
+              <Heart size={12} color={C.textHint} fill={C.textHint} />
+              <Text style={{ fontSize: 12, color: C.textHint }}>
+                Санхүүгийн зөв дадлыг бага наснаас нь
+              </Text>
+            </View>
           </Animated.View>
         </SafeAreaView>
       </View>
     );
   }
 
-  // ─── Login Screen ─────────────────────
+  // ╔══════════════════════════════════════════════════════╗
+  // ║  LOGIN                                               ║
+  // ╚══════════════════════════════════════════════════════╝
   if (mode === 'login') {
     return (
-      <View className="flex-1 bg-[#0B0B1E]">
-        <StatusBar barStyle="light-content" />
-        <View className="absolute w-72 h-72 rounded-full bg-[#6C63FF]/15 -top-16 -right-12" />
-
-        <SafeAreaView className="flex-1">
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            className="flex-1"
-          >
+      <View style={{ flex: 1, backgroundColor: C.cream }}>
+        <StatusBar barStyle="dark-content" backgroundColor={C.cream} />
+        <SafeAreaView style={{ flex: 1 }}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
             <ScrollView
-              className="flex-1 px-6 pt-4"
-              contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32, flexGrow: 1 }}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
-              <Animated.View entering={FadeInUp.duration(600)}>
-                <TouchableOpacity onPress={() => { setMode('welcome'); setSelectedUser(null); setPin(''); setError(''); }}>
-                  <Text className="text-white/60 text-base mb-4">← Буцах</Text>
+              {/* Back */}
+              <Animated.View entering={FadeInUp.duration(500)}>
+                <TouchableOpacity
+                  onPress={resetAndBack}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 20 }}
+                >
+                  <ChevronLeft size={18} color={C.textSecondary} />
+                  <Text style={{ color: C.textSecondary, fontSize: 14, fontWeight: '600' }}>Буцах</Text>
                 </TouchableOpacity>
-                <Text className="text-3xl font-black text-white mb-2">Нэвтрэх</Text>
-                <Text className="text-base text-white/50 mb-8">Хэрэглэгчээ сонгоод PIN оруулна уу</Text>
+
+                <Text style={{ fontSize: 28, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.5 }}>
+                  Нэвтрэх
+                </Text>
+                <Text style={{ fontSize: 14, color: C.textSecondary, marginTop: 4, marginBottom: 28 }}>
+                  Хэрэглэгчээ сонгоод PIN оруулна уу
+                </Text>
               </Animated.View>
 
-              {/* User list */}
-              <Animated.View entering={FadeInDown.duration(600).delay(200)} className="gap-3 mb-6">
-                {state.users.map((user, index) => {
-                  const avatarConfig = AVATARS.find(a => a.key === user.avatar);
-                  const bgColor = avatarConfig?.color || '#6C63FF';
+              {/* User cards */}
+              <Animated.View entering={FadeInDown.duration(500).delay(150)} style={{ gap: 10, marginBottom: 24 }}>
+                <SectionLabel>Хэрэглэгч</SectionLabel>
+                {state.users.map(user => {
+                  const av = AVATARS.find(a => a.key === user.avatar);
                   const isSelected = selectedUser === user.id;
+                  const accentColor = av?.color ?? C.indigo;
+                  const softColor   = av?.softColor ?? C.indigoSoft;
 
                   return (
                     <TouchableOpacity
                       key={user.id}
-                      className={`flex-row items-center p-4 rounded-2xl border-2 ${
-                        isSelected ? 'border-[#6C63FF] bg-[#6C63FF]/10' : 'border-white/10 bg-white/5'
-                      }`}
                       onPress={() => { setSelectedUser(user.id); setError(''); }}
-                      activeOpacity={0.7}
+                      activeOpacity={0.75}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: 14,
+                        borderRadius: 18,
+                        backgroundColor: isSelected ? softColor : C.surface,
+                        borderWidth: 1.5,
+                        borderColor: isSelected ? accentColor : C.border,
+                      }}
                     >
-                      <View
-                        className="w-12 h-12 rounded-xl justify-center items-center mr-4"
-                        style={{ backgroundColor: bgColor }}
-                      >
-                        {getAvatarIcon(user.avatar, 24, '#fff')}
+                      {/* Avatar circle */}
+                      <View style={{
+                        width: 48, height: 48, borderRadius: 16,
+                        backgroundColor: accentColor,
+                        justifyContent: 'center', alignItems: 'center',
+                        marginRight: 14,
+                      }}>
+                        {getAvatarIcon(user.avatar, 22, '#fff')}
                       </View>
-                      <View className="flex-1">
-                        <Text className="text-white text-lg font-bold">{user.name}</Text>
-                        <Text className="text-white/40 text-sm">
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: C.textPrimary }}>{user.name}</Text>
+                        <Text style={{ fontSize: 13, color: C.textSecondary, marginTop: 2 }}>
                           {user.role === 'parent' ? 'Эцэг эх' : 'Хүүхэд'}
                         </Text>
                       </View>
-                      {isSelected && (
-                        <View className="w-6 h-6 rounded-full bg-[#6C63FF] justify-center items-center">
-                          <Text className="text-white text-xs font-bold">✓</Text>
-                        </View>
-                      )}
+
+                      {/* Selection indicator */}
+                      <View style={{
+                        width: 22, height: 22, borderRadius: 11,
+                        backgroundColor: isSelected ? accentColor : C.border,
+                        justifyContent: 'center', alignItems: 'center',
+                      }}>
+                        {isSelected && (
+                          <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>✓</Text>
+                        )}
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
               </Animated.View>
 
-              {/* PIN Input */}
+              {/* PIN section */}
               {selectedUser && (
-                <Animated.View entering={FadeInDown.duration(400)} className="gap-4">
-                  <Text className="text-white/70 text-sm font-semibold">4 оронтой PIN</Text>
-                  <View className="flex-row gap-3 justify-center mb-2">
-                    {[0, 1, 2, 3].map(i => (
-                      <View
-                        key={i}
-                        className={`w-14 h-14 rounded-2xl justify-center items-center border-2 ${
-                          pin.length > i ? 'bg-[#6C63FF] border-[#6C63FF]' : 'border-white/20 bg-white/5'
-                        }`}
-                      >
-                        <Text className="text-white text-2xl font-bold">
-                          {pin.length > i ? '•' : ''}
-                        </Text>
-                      </View>
-                    ))}
+                <Animated.View entering={FadeInDown.duration(400)} style={{ gap: 16 }}>
+                  <SectionLabel>4 оронтой PIN</SectionLabel>
+
+                  {/* PIN dots */}
+                  <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 4 }}>
+                    {[0, 1, 2, 3].map(i => {
+                      const filled = pin.length > i;
+                      return (
+                        <View
+                          key={i}
+                          style={{
+                            width: 56, height: 56, borderRadius: 16,
+                            justifyContent: 'center', alignItems: 'center',
+                            backgroundColor: filled ? C.indigo : C.surface,
+                            borderWidth: 1.5,
+                            borderColor: filled ? C.indigo : C.border,
+                          }}
+                        >
+                          {filled && (
+                            <View style={{
+                              width: 12, height: 12, borderRadius: 6,
+                              backgroundColor: '#fff',
+                            }} />
+                          )}
+                        </View>
+                      );
+                    })}
                   </View>
+
+                  {/* Invisible input to capture keyboard */}
                   <TextInput
-                    className="absolute opacity-0 w-full h-14"
                     value={pin}
                     onChangeText={t => { setPin(t.slice(0, 4)); setError(''); }}
                     keyboardType="number-pad"
                     maxLength={4}
                     autoFocus
+                    style={{ position: 'absolute', opacity: 0, width: '100%', height: 56 }}
                   />
 
                   {error ? (
-                    <Text className="text-red-400 text-center text-sm font-medium">{error}</Text>
+                    <View style={{
+                      backgroundColor: '#FFF0F0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+                    }}>
+                      <Text style={{ color: '#D94040', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
+                        {error}
+                      </Text>
+                    </View>
                   ) : null}
 
-                  <TouchableOpacity
-                    className={`rounded-2xl py-4 items-center mt-2 ${
-                      pin.length === 4 ? 'bg-[#6C63FF]' : 'bg-white/10'
-                    }`}
+                  <PrimaryButton
+                    label="Нэвтрэх"
                     onPress={handleLogin}
                     disabled={pin.length < 4}
-                    activeOpacity={0.7}
-                  >
-                    <Text className={`text-lg font-bold ${pin.length === 4 ? 'text-white' : 'text-white/30'}`}>
-                      Нэвтрэх
-                    </Text>
-                  </TouchableOpacity>
+                    icon={pin.length === 4 ? <ArrowRight size={18} color="#fff" /> : undefined}
+                  />
                 </Animated.View>
               )}
             </ScrollView>
@@ -262,56 +513,81 @@ export default function LoginScreen() {
     );
   }
 
-  // ─── Register Screen ──────────────────
+  // ╔══════════════════════════════════════════════════════╗
+  // ║  REGISTER                                            ║
+  // ╚══════════════════════════════════════════════════════╝
   return (
-    <View className="flex-1 bg-[#0B0B1E]">
-      <StatusBar barStyle="light-content" />
-      <View className="absolute w-72 h-72 rounded-full bg-[#4ECDC4]/15 -top-16 -left-12" />
-
-      <SafeAreaView className="flex-1">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
+    <View style={{ flex: 1, backgroundColor: C.cream }}>
+      <StatusBar barStyle="dark-content" backgroundColor={C.cream} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView
-            className="flex-1 px-6 pt-4"
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Animated.View entering={FadeInUp.duration(600)}>
-              <TouchableOpacity onPress={() => { setMode('welcome'); setError(''); }}>
-                <Text className="text-white/60 text-base mb-4">← Буцах</Text>
+            {/* Back */}
+            <Animated.View entering={FadeInUp.duration(500)}>
+              <TouchableOpacity
+                onPress={resetAndBack}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 20 }}
+              >
+                <ChevronLeft size={18} color={C.textSecondary} />
+                <Text style={{ color: C.textSecondary, fontSize: 14, fontWeight: '600' }}>Буцах</Text>
               </TouchableOpacity>
-              <Text className="text-3xl font-black text-white mb-2">Бүртгүүлэх</Text>
-              <Text className="text-base text-white/50 mb-6">Шинэ хэрэглэгч үүсгэх</Text>
+
+              <Text style={{ fontSize: 28, fontWeight: '800', color: C.textPrimary, letterSpacing: -0.5 }}>
+                Бүртгүүлэх
+              </Text>
+              <Text style={{ fontSize: 14, color: C.textSecondary, marginTop: 4, marginBottom: 28 }}>
+                Гэр бүлийн шинэ гишүүн нэмэх
+              </Text>
             </Animated.View>
 
-            <Animated.View entering={FadeInDown.duration(600).delay(200)} className="gap-5">
+            <Animated.View entering={FadeInDown.duration(500).delay(150)} style={{ gap: 22 }}>
+
               {/* Role */}
               <View>
-                <Text className="text-white/70 text-sm font-semibold mb-2">Дүр</Text>
-                <View className="flex-row gap-3">
+                <SectionLabel>Дүр</SectionLabel>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
-                    className={`flex-1 p-4 rounded-2xl border-2 items-center ${
-                      regRole === 'parent' ? 'border-[#6C63FF] bg-[#6C63FF]/10' : 'border-white/10 bg-white/5'
-                    }`}
                     onPress={() => setRegRole('parent')}
+                    activeOpacity={0.75}
+                    style={{
+                      flex: 1, padding: 16, borderRadius: 18, alignItems: 'center', gap: 8,
+                      backgroundColor: regRole === 'parent' ? C.peachSoft : C.surface,
+                      borderWidth: 1.5,
+                      borderColor: regRole === 'parent' ? C.peach : C.border,
+                    }}
                   >
-                    <ShieldCheck size={28} color={regRole === 'parent' ? '#6C63FF' : '#ffffff80'} />
-                    <Text className={`text-sm font-bold mt-2 ${regRole === 'parent' ? 'text-[#6C63FF]' : 'text-white/50'}`}>
-                      Эцэг эх
+                    <ShieldCheck size={28} color={regRole === 'parent' ? C.peach : C.textHint} />
+                    <Text style={{
+                      fontSize: 13, fontWeight: '700',
+                      color: regRole === 'parent' ? C.peach : C.textSecondary,
+                    }}>Эцэг эх</Text>
+                    <Text style={{ fontSize: 11, color: C.textHint, textAlign: 'center' }}>
+                      Хянах, зохицуулах
                     </Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
-                    className={`flex-1 p-4 rounded-2xl border-2 items-center ${
-                      regRole === 'child' ? 'border-[#4ECDC4] bg-[#4ECDC4]/10' : 'border-white/10 bg-white/5'
-                    }`}
                     onPress={() => setRegRole('child')}
+                    activeOpacity={0.75}
+                    style={{
+                      flex: 1, padding: 16, borderRadius: 18, alignItems: 'center', gap: 8,
+                      backgroundColor: regRole === 'child' ? C.mintSoft : C.surface,
+                      borderWidth: 1.5,
+                      borderColor: regRole === 'child' ? C.mint : C.border,
+                    }}
                   >
-                    <Rocket size={28} color={regRole === 'child' ? '#4ECDC4' : '#ffffff80'} />
-                    <Text className={`text-sm font-bold mt-2 ${regRole === 'child' ? 'text-[#4ECDC4]' : 'text-white/50'}`}>
-                      Хүүхэд
+                    <Rocket size={28} color={regRole === 'child' ? C.mint : C.textHint} />
+                    <Text style={{
+                      fontSize: 13, fontWeight: '700',
+                      color: regRole === 'child' ? C.mint : C.textSecondary,
+                    }}>Хүүхэд</Text>
+                    <Text style={{ fontSize: 11, color: C.textHint, textAlign: 'center' }}>
+                      Суралцах, тоглох
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -319,76 +595,88 @@ export default function LoginScreen() {
 
               {/* Avatar */}
               <View>
-                <Text className="text-white/70 text-sm font-semibold mb-2">Аватар</Text>
-                <View className="flex-row gap-3 justify-center">
-                  {AVATARS.map(av => (
-                    <TouchableOpacity
-                      key={av.key}
-                      className={`w-14 h-14 rounded-2xl justify-center items-center border-2 ${
-                        regAvatar === av.key ? 'border-white' : 'border-transparent'
-                      }`}
-                      style={{ backgroundColor: av.color + (regAvatar === av.key ? '' : '40') }}
-                      onPress={() => setRegAvatar(av.key)}
-                    >
-                      <av.Icon size={24} color="#fff" />
-                    </TouchableOpacity>
-                  ))}
+                <SectionLabel>Аватар</SectionLabel>
+                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
+                  {AVATARS.map(av => {
+                    const active = regAvatar === av.key;
+                    return (
+                      <TouchableOpacity
+                        key={av.key}
+                        onPress={() => setRegAvatar(av.key)}
+                        activeOpacity={0.75}
+                        style={{
+                          width: 54, height: 54, borderRadius: 16,
+                          justifyContent: 'center', alignItems: 'center',
+                          backgroundColor: active ? av.color : av.softColor,
+                          borderWidth: 2,
+                          borderColor: active ? av.color : 'transparent',
+                        }}
+                      >
+                        <av.Icon size={24} color={active ? '#fff' : av.color} />
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
 
               {/* Name */}
               <View>
-                <Text className="text-white/70 text-sm font-semibold mb-2">Нэр</Text>
-                <TextInput
-                  className="bg-white/10 rounded-2xl p-4 text-white text-base border border-white/10"
+                <SectionLabel>Нэр</SectionLabel>
+                <FloatingInput
                   value={regName}
                   onChangeText={setRegName}
                   placeholder="Нэрээ оруулна уу"
-                  placeholderTextColor="#ffffff40"
                 />
               </View>
 
-              {/* Age (only for child) */}
+              {/* Age (child only) */}
               {regRole === 'child' && (
                 <View>
-                  <Text className="text-white/70 text-sm font-semibold mb-2">Нас (6-18)</Text>
-                  <TextInput
-                    className="bg-white/10 rounded-2xl p-4 text-white text-base border border-white/10 text-center"
+                  <SectionLabel>Нас</SectionLabel>
+                  <FloatingInput
                     value={regAge}
                     onChangeText={t => setRegAge(t.replace(/[^0-9]/g, '').slice(0, 2))}
+                    placeholder="жишээ: 10"
                     keyboardType="number-pad"
                     maxLength={2}
-                    placeholder="10"
-                    placeholderTextColor="#ffffff40"
+                    center
                   />
+                  <Text style={{ fontSize: 11, color: C.textHint, marginTop: 4 }}>6–18 насны хооронд</Text>
                 </View>
               )}
 
               {/* PIN */}
               <View>
-                <Text className="text-white/70 text-sm font-semibold mb-2">PIN (4 орон)</Text>
-                <TextInput
-                  className="bg-white/10 rounded-2xl p-4 text-white text-base border border-white/10 tracking-[12px] text-center"
+                <SectionLabel>PIN код</SectionLabel>
+                <FloatingInput
                   value={regPin}
                   onChangeText={t => setRegPin(t.slice(0, 4))}
+                  placeholder="• • • •"
                   keyboardType="number-pad"
                   maxLength={4}
                   secureTextEntry
-                  placeholder="• • • •"
-                  placeholderTextColor="#ffffff40"
+                  center
                 />
+                <Text style={{ fontSize: 11, color: C.textHint, marginTop: 4 }}>4 оронтой тоо</Text>
               </View>
 
-              {error ? <Text className="text-red-400 text-sm">{error}</Text> : null}
+              {/* Error */}
+              {error ? (
+                <View style={{
+                  backgroundColor: '#FFF0F0', borderRadius: 12,
+                  paddingHorizontal: 14, paddingVertical: 10,
+                }}>
+                  <Text style={{ color: '#D94040', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
 
-              <TouchableOpacity
-                className="bg-[#6C63FF] rounded-2xl py-4 items-center flex-row justify-center gap-2"
+              <PrimaryButton
+                label="Бүртгүүлэх"
                 onPress={handleRegister}
-                activeOpacity={0.7}
-              >
-                <UserPlus size={20} color="#fff" />
-                <Text className="text-white text-lg font-bold">Бүртгүүлэх</Text>
-              </TouchableOpacity>
+                icon={<UserPlus size={18} color="#fff" />}
+              />
             </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
