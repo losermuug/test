@@ -28,12 +28,21 @@ export default function ParentTasks() {
   const [description, setDescription] = useState('');
   const [reward, setReward] = useState('');
 
+  const childObj = state.children.find(c => c.id === selectedChild);
+  const isJuniorSelected = childObj && childObj.age <= 9;
+
   const handleCreateTask = () => {
     if (!title.trim()) { Alert.alert('Алдаа', 'Даалгаврын нэр оруулна уу'); return; }
-    dispatch({ type: 'CREATE_TASK', childId: selectedChild, title: title.trim(), description: description.trim(), reward: parseInt(reward) || 0 });
+
+    let rewardAmount = parseInt(reward) || 0;
+    if (isJuniorSelected) {
+      rewardAmount = rewardAmount * 1000;
+    }
+
+    dispatch({ type: 'CREATE_TASK', childId: selectedChild, title: title.trim(), description: description.trim(), reward: rewardAmount });
     setTitle(''); setDescription(''); setReward('');
     setShowForm(false);
-    Alert.alert('Амжилттай', 'Даалгавар үүсгэлээ!');
+    Alert.alert('Амжилттай', isJuniorSelected ? `${parseInt(reward) || 0} зоосны даалгавар үүсгэлээ!` : `₮${rewardAmount.toLocaleString()} даалгавар үүсгэлээ!`);
   };
 
   const handleApprove = (childId: string, taskId: string) => {
@@ -98,10 +107,12 @@ export default function ParentTasks() {
                   <TouchableOpacity
                     key={i}
                     className="bg-[#F8F8FC] rounded-xl px-3 py-2 border border-[#F2F2F7]"
-                    onPress={() => { setTitle(qt.title); setReward(qt.reward.toString()); }}
+                    onPress={() => { setTitle(qt.title); setReward(isJuniorSelected ? (qt.reward / 1000).toString() : qt.reward.toString()); }}
                   >
                     <Text className="text-sm text-[#1a1a2e] font-medium">{qt.title}</Text>
-                    <Text className="text-xs text-[#34C759] font-bold">₮{qt.reward}</Text>
+                    <Text className="text-xs text-[#34C759] font-bold">
+                      {isJuniorSelected ? `${qt.reward / 1000} зоос` : `₮${qt.reward}`}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -121,9 +132,9 @@ export default function ParentTasks() {
 
             <View className="flex-row items-center gap-2 mb-2">
               <Gift size={14} color="#8E8E93" />
-              <Text className="text-sm font-semibold text-[#8E8E93]">Шагнал (₮)</Text>
+              <Text className="text-sm font-semibold text-[#8E8E93]">{isJuniorSelected ? 'Шагнал (зоос)' : 'Шагнал (₮)'}</Text>
             </View>
-            <TextInput className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-4 border border-[#F2F2F7]" value={reward} onChangeText={setReward} keyboardType="number-pad" placeholder="500" placeholderTextColor="#C7C7CC" />
+            <TextInput className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-4 border border-[#F2F2F7]" value={reward} onChangeText={setReward} keyboardType="number-pad" placeholder={isJuniorSelected ? "Жишээ нь: 2" : "500"} placeholderTextColor="#C7C7CC" />
 
             <TouchableOpacity className="bg-[#6C63FF] rounded-2xl py-4 items-center" onPress={handleCreateTask} activeOpacity={0.7}>
               <Text className="text-white text-base font-bold">Даалгавар үүсгэх</Text>
