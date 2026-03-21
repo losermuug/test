@@ -67,9 +67,9 @@ export default function ChildProfile() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
       {isJunior && <JuniorBackground />}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Profile Header */}
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-6 items-center">
           <View className="w-24 h-24 rounded-3xl justify-center items-center mb-4 shadow-lg border-2" style={{ backgroundColor: primaryColor, shadowColor: primaryColor, borderColor: isJunior ? '#F3E8FF' : '#E0F2FE' }}>

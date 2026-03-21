@@ -36,9 +36,9 @@ export default function ChildTasks() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: isJunior ? '#FDF4FF' : '#F8F8FC' }}>
       {isJunior && <JuniorBackground />}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2">
           <Text className="text-2xl font-black text-[#1a1a2e]">Даалгаврууд</Text>
           <Text className="text-sm text-[#AEAEB2] mt-0.5">Ажил хийж мөнгө олоорой!</Text>

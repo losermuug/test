@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -233,7 +233,9 @@ export default function LoginScreen() {
   const [regPin, setRegPin]     = useState('');
   const [regRole, setRegRole]   = useState<'parent' | 'child'>('child');
   const [regAvatar, setRegAvatar] = useState('rocket');
-  const [regAge, setRegAge]     = useState('');
+   const [regAge, setRegAge]     = useState('');
+ 
+   const pinInputRef = useRef<TextInput>(null);
 
   // ── Handlers ────────────────────────────────────────────
   const handleLogin = () => {
@@ -261,8 +263,8 @@ export default function LoginScreen() {
     }
     if (regRole === 'child') {
       const age = parseInt(regAge);
-      if (!age || age < 6 || age > 18) {
-        setError('6-18 насны хооронд оруулна уу');
+      if (!age || age < 5 || age > 17) {
+        setError('5-17 насны хооронд оруулна уу');
         return;
       }
     }
@@ -366,7 +368,11 @@ export default function LoginScreen() {
       <View style={{ flex: 1, backgroundColor: C.cream }}>
         <StatusBar barStyle="dark-content" backgroundColor={C.cream} />
         <SafeAreaView style={{ flex: 1 }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+            style={{ flex: 1 }}
+          >
             <ScrollView
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32, flexGrow: 1 }}
@@ -428,7 +434,9 @@ export default function LoginScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 16, fontWeight: '700', color: C.textPrimary }}>{user.name}</Text>
                         <Text style={{ fontSize: 13, color: C.textSecondary, marginTop: 2 }}>
-                          {user.role === 'parent' ? 'Эцэг эх' : 'Хүүхэд'}
+                          {user.role === 'parent' 
+                            ? 'Эцэг эх' 
+                            : user.age! <= 10 ? '5-10 нас' : user.age! <= 14 ? '11-14 нас' : '15-17 нас'}
                         </Text>
                       </View>
 
@@ -452,8 +460,12 @@ export default function LoginScreen() {
                 <Animated.View entering={FadeInDown.duration(400)} style={{ gap: 16 }}>
                   <SectionLabel>4 оронтой PIN</SectionLabel>
 
-                  {/* PIN dots */}
-                  <View style={{ flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 4 }}>
+                  {/* PIN dots area wrappted in Touchable to refocus */}
+                  <TouchableOpacity 
+                    activeOpacity={1} 
+                    onPress={() => pinInputRef.current?.focus()}
+                    style={{ flexDirection: 'row', gap: 12, justifyContent: 'center', marginBottom: 4 }}
+                  >
                     {[0, 1, 2, 3].map(i => {
                       const filled = pin.length > i;
                       return (
@@ -476,17 +488,17 @@ export default function LoginScreen() {
                         </View>
                       );
                     })}
-                  </View>
-
-                  {/* Invisible input to capture keyboard */}
-                  <TextInput
-                    value={pin}
-                    onChangeText={t => { setPin(t.slice(0, 4)); setError(''); }}
-                    keyboardType="number-pad"
-                    maxLength={4}
-                    autoFocus
-                    style={{ position: 'absolute', opacity: 0, width: '100%', height: 56 }}
-                  />
+                    {/* Hidden input to capture keyboard - placed here so KAV tracks it */}
+                    <TextInput
+                      ref={pinInputRef}
+                      value={pin}
+                      onChangeText={t => { setPin(t.slice(0, 4)); setError(''); }}
+                      keyboardType="number-pad"
+                      maxLength={4}
+                      autoFocus
+                      style={{ position: 'absolute', opacity: 0, width: '100%', height: 56 }}
+                    />
+                  </TouchableOpacity>
 
                   {error ? (
                     <View style={{
@@ -641,7 +653,7 @@ export default function LoginScreen() {
                     maxLength={2}
                     center
                   />
-                  <Text style={{ fontSize: 11, color: C.textHint, marginTop: 4 }}>6–18 насны хооронд</Text>
+                  <Text style={{ fontSize: 11, color: C.textHint, marginTop: 4 }}>5–17 насны хооронд</Text>
                 </View>
               )}
 

@@ -132,8 +132,8 @@ export default function ChildLoans() {
     if (activeLesson) {
       const isCompleted = child.achievements.some(a => a.id === activeLesson.badgeId);
       return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: '#FFF5F5' }}>
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: '#FFF5F5' }}>
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
             <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
               <TouchableOpacity
                 className="w-10 h-10 rounded-full bg-[#E0F2FE] justify-center items-center"
@@ -176,8 +176,8 @@ export default function ChildLoans() {
     }
 
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: '#FFF5F5' }}>
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: '#FFF5F5' }}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2">
             <Text className="text-2xl font-black text-[#1a1a2e]">Зээлийн тухай суралцая!</Text>
             <Text className="text-sm text-[#0A7EA4] font-bold mt-1">
@@ -264,8 +264,8 @@ export default function ChildLoans() {
 
     if (activeTopic) {
       return (
-        <SafeAreaView className="flex-1 bg-[#F0F0F8]">
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#F0F0F8]">
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
             <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
               <TouchableOpacity
                 className="w-10 h-10 rounded-2xl bg-[#E0E0EA] justify-center items-center"
@@ -287,8 +287,8 @@ export default function ChildLoans() {
     }
 
     return (
-      <SafeAreaView className="flex-1 bg-[#F0F0F8]">
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#F0F0F8]">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2 flex-row justify-between items-center">
             <View>
               <Text className="text-2xl font-black text-[#1a1a2e]">Зээлийн удирдлага</Text>
@@ -307,10 +307,10 @@ export default function ChildLoans() {
           </Animated.View>
 
           {/* Deep Learning Section */}
-          <Animated.View entering={FadeInDown.duration(500).delay(50)} className="px-6 mt-3 mb-4">
+          {/* <Animated.View entering={FadeInDown.duration(500).delay(50)} className="px-6 mt-3 mb-4">
             <View className="flex-row items-center gap-2 mb-3">
               <BookOpen size={16} color="#0A7EA4" />
-              <Text className="text-sm font-bold text-[#0A7EA4]">Гүнзгий суралцах</Text>
+              <Text className="text-sm font-bold text-[#0A7EA4]"></Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {seniorLoanTopics.map((topic, i) => (
@@ -328,7 +328,7 @@ export default function ChildLoans() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </Animated.View>
+          </Animated.View> */}
 
           {/* Loan Request Form */}
           {showForm && (
@@ -553,8 +553,8 @@ export default function ChildLoans() {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F8FC]">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+    <SafeAreaView edges={['top', 'left', 'right']} className="flex-1 bg-[#F8F8FC]">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2 flex-row justify-between items-center">
           <View>
             <Text className="text-2xl font-black text-[#1a1a2e]">Миний зээлүүд</Text>

@@ -83,7 +83,7 @@ export interface Child {
 type AgeGroup = 'junior' | 'teen' | 'senior';
 
 const getAgeGroup = (age: number): AgeGroup => {
-  if (age <= 9) return 'junior';
+  if (age <= 10) return 'junior';
   if (age <= 14) return 'teen';
   return 'senior';
 };

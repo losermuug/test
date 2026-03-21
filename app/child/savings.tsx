@@ -128,9 +128,9 @@ export default function ChildSavings() {
   if (isJunior) {
     const starCount = Math.min(Math.floor(child.savings / 2000), 5);
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#FDF4FF' }}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: '#FDF4FF' }}>
         <JuniorBackground />
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
             <Text style={{ fontSize: 24, fontWeight: '900', color: '#1a1a2e' }}>Миний хагас банк 🐷</Text>
@@ -248,8 +248,8 @@ export default function ChildSavings() {
     const yearlyInterest = Math.round(child.savings * interestRate);
 
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#F4F4F9' }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+      <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: '#F4F4F9' }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Header */}
           <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
             <Text style={{ fontSize: 10, color: '#6B7280', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' }}>Хадгаламжийн данс</Text>
@@ -367,8 +367,8 @@ export default function ChildSavings() {
   // TEEN (10-14) — Bold goal tracker with vibrant colors
   // ═══════════════════════════════════════════════════════════
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F0F0FB' }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: '#F0F0FB' }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <Animated.View entering={FadeInDown.duration(500)} style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 8 }}>
           <Text style={{ fontSize: 24, fontWeight: '900', color: '#1a1a2e' }}>Миний хадгаламж</Text>

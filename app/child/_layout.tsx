@@ -24,9 +24,8 @@ export default function ChildLayout() {
           backgroundColor: tabBg,
           borderTopWidth: 1,
           borderTopColor: '#F2F2F7',
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-          paddingTop: 10,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           elevation: 0,
           shadowOpacity: 0,
         },
@@ -101,7 +100,7 @@ export default function ChildLayout() {
       <Tabs.Screen
         name="learn"
         options={{
-          title: 'Суралцах',
+          title: 'Хичээл',
           href: isJunior ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
             <View style={{

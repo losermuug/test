@@ -72,9 +72,9 @@ export default function ChildLearn() {
     const progressPct = totalLessons > 0 ? (completedCount / totalLessons) * 100 : 0;
 
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+      <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: bgColor }}>
         {isJunior && <JuniorBackground />}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2">
             <Text className="text-2xl font-black text-[#1a1a2e]">
               {isJunior ? 'Санхүүгийн хичээл' : isSenior ? 'Санхүүгийн сургалт' : 'Санхүүгийн хичээл'}
@@ -285,9 +285,9 @@ export default function ChildLearn() {
     const isLast = currentStep === selectedLesson.steps.length - 1;
 
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+      <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: bgColor }}>
         {isJunior && <JuniorBackground />}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
             <TouchableOpacity
               className="w-10 h-10 rounded-2xl justify-center items-center"
@@ -369,9 +369,9 @@ export default function ChildLearn() {
   // ─── Quiz ──────────────────────
   if (viewMode === 'quiz' && selectedLesson) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
+      <SafeAreaView edges={['top', 'left', 'right']} className="flex-1" style={{ backgroundColor: bgColor }}>
         {isJunior && <JuniorBackground />}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <Animated.View entering={FadeInDown.duration(400)} className="px-6 pt-4 pb-2 flex-row items-center gap-3">
             <TouchableOpacity
               className="w-10 h-10 rounded-2xl justify-center items-center"

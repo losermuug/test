@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
+import {
+  View, Text, ScrollView, TouchableOpacity, TextInput,
+  Alert, Modal, KeyboardAvoidingView, Platform,
+  TouchableWithoutFeedback, StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '@/contexts/AppContext';
 import LoanCard from '@/components/app/LoanCard';
@@ -8,12 +12,75 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   Plus, X, Wallet, Percent, Calendar, Calculator,
   Rocket, Star, ShieldCheck, Sparkles, GraduationCap,
-  CheckCircle, XCircle, Clock, MessageSquare, Send, ArrowDownToLine,
+  CheckCircle, XCircle, Clock, MessageSquare, Send,
 } from 'lucide-react-native';
 
-const AVATAR_ICONS: Record<string, any> = {
-  rocket: Rocket, star: Star, shield: ShieldCheck, sparkle: Sparkles, graduate: GraduationCap,
+// ── Design tokens (same as ParentDashboard) ──────────────────────────────────
+const T = {
+  canvas:    '#F2F2F4',
+  surface:   '#FFFFFF',
+  surfaceAlt:'#F7F7F9',
+  border:    '#E4E4E8',
+  borderMid: '#CECECE',
+  ink:       '#111118',
+  inkMid:    '#44444C',
+  inkMute:   '#909099',
+  brand:     '#4845C8',
+  brandSoft: '#EEEEFF',
+  gain:      '#1A9E5C',
+  gainSoft:  '#E8F9F0',
+  loss:      '#D63B3B',
+  lossSoft:  '#FEECEC',
 };
+
+const AVATAR_ICONS: Record<string, any> = {
+  rocket: Rocket, star: Star, shield: ShieldCheck,
+  sparkle: Sparkles, graduate: GraduationCap,
+};
+
+// ── Atoms ─────────────────────────────────────────────────────────────────────
+
+const HRule = () => (
+  <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: T.border }} />
+);
+
+const InputLabel = ({ text }: { text: string }) => (
+  <Text style={{ fontSize: 11, fontWeight: '600', color: T.inkMute, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 7 }}>
+    {text}
+  </Text>
+);
+
+const Field = (props: any) => (
+  <TextInput
+    {...props}
+    style={[{
+      backgroundColor: T.surfaceAlt, borderRadius: 14,
+      paddingHorizontal: 14, paddingVertical: 13,
+      fontSize: 15, color: T.ink,
+      borderWidth: StyleSheet.hairlineWidth, borderColor: T.border,
+      marginBottom: 16,
+    }, props.style]}
+    placeholderTextColor={T.inkMute}
+  />
+);
+
+const PrimaryBtn = ({ label, onPress, icon, color }: {
+  label: string; onPress: () => void; icon?: React.ReactNode; color?: string;
+}) => (
+  <TouchableOpacity
+    onPress={onPress} activeOpacity={0.85}
+    style={{
+      backgroundColor: color || T.brand, borderRadius: 16,
+      paddingVertical: 15, flexDirection: 'row',
+      alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}
+  >
+    {icon}
+    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{label}</Text>
+  </TouchableOpacity>
+);
+
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function ParentLoans() {
   const { state, dispatch } = useApp();
@@ -22,37 +89,31 @@ export default function ParentLoans() {
   const [amount, setAmount] = useState('');
   const [interestRate, setInterestRate] = useState('10');
   const [dueDays, setDueDays] = useState('7');
-
-  // Request Approval Modal State
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [approveInterest, setApproveInterest] = useState('10');
 
   const childObj = state.children.find(c => c.id === selectedChild);
-  const isJuniorSelected = childObj && childObj.age <= 9;
   const isTeenSelected = childObj && childObj.age >= 10 && childObj.age <= 14;
-  const isSeniorSelected = childObj && childObj.age >= 15;
-
   const currentInterestRate = isTeenSelected ? 0 : parseFloat(interestRate) || 0;
 
-  // Pending loan requests from all children
-  const pendingRequests = state.children.flatMap(c =>
-    c.loanRequests
-      .filter(r => r.status === 'pending')
-      .map(r => ({ ...r, childName: c.name, childAvatar: c.avatar }))
-  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const pendingRequests = state.children
+    .flatMap(c => c.loanRequests.filter(r => r.status === 'pending').map(r => ({
+      ...r, childName: c.name, childAvatar: c.avatar,
+    })))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const allLoans = state.children
+    .flatMap(c => c.loans.map(l => ({ ...l, childName: c.name, childAvatar: c.avatar })))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const handleCreateLoan = () => {
     const amountNum = parseInt(amount);
-    if (!amountNum || amountNum <= 0) {
-      Alert.alert('Алдаа', 'Зээлийн дүнг зөв оруулна уу');
-      return;
-    }
+    if (!amountNum || amountNum <= 0) { Alert.alert('Алдаа', 'Зээлийн дүнг зөв оруулна уу'); return; }
     const dueDate = new Date();
     const days = parseInt(dueDays) || 0;
     dueDate.setDate(dueDate.getDate() + days);
     dispatch({ type: 'CREATE_LOAN', childId: selectedChild, amount: amountNum, interestRate: currentInterestRate, dueDays: days, dueDate: dueDate.toISOString() });
-    setAmount('');
-    setShowForm(false);
+    setAmount(''); setShowForm(false);
     Alert.alert('Амжилттай', `₮${amountNum.toLocaleString()} зээл үүсгэлээ!`);
   };
 
@@ -63,12 +124,11 @@ export default function ParentLoans() {
 
   const confirmApproveRequest = () => {
     if (!selectedRequest) return;
-    const finalInterest = parseFloat(approveInterest) || 0;
     dispatch({
       type: 'APPROVE_LOAN_REQUEST',
       childId: selectedRequest.childId,
       requestId: selectedRequest.id,
-      interestRate: finalInterest,
+      interestRate: parseFloat(approveInterest) || 0,
       dueDays: selectedRequest.dueDays || 14,
       installments: selectedRequest.installments || 1,
     });
@@ -77,83 +137,78 @@ export default function ParentLoans() {
   };
 
   const handleRejectRequest = (childId: string, requestId: string) => {
-    Alert.alert(
-      'Зээл татгалзах',
-      'Энэ зээлийн хүсэлтийг татгалзах уу?',
-      [
-        { text: 'Болих', style: 'cancel' },
-        {
-          text: 'Татгалзах',
-          style: 'destructive',
-          onPress: () => {
-            dispatch({ type: 'REJECT_LOAN_REQUEST', childId, requestId });
-            Alert.alert('Татгалзлаа', 'Зээлийн хүсэлт татгалзагдлаа.');
-          },
+    Alert.alert('Зээл татгалзах', 'Энэ зээлийн хүсэлтийг татгалзах уу?', [
+      { text: 'Болих', style: 'cancel' },
+      {
+        text: 'Татгалзах', style: 'destructive',
+        onPress: () => {
+          dispatch({ type: 'REJECT_LOAN_REQUEST', childId, requestId });
+          Alert.alert('Татгалзлаа', 'Зээлийн хүсэлт татгалзагдлаа.');
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  const allLoans = state.children.flatMap(c =>
-    c.loans.map(l => ({ ...l, childName: c.name, childAvatar: c.avatar }))
-  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const amountNum = parseInt(amount || '0');
+  const daysNum = parseInt(dueDays);
+  const interest = Math.round(amountNum * (currentInterestRate / 100) * (daysNum / 30));
+  const total = amountNum + interest;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F8F8FC]">
-      {/* Approve Request Modal */}
+    <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: T.canvas }}>
+
+      {/* ── Approve sheet ────────────────────────────────────────────── */}
       <Modal visible={!!selectedRequest} transparent animationType="slide" onRequestClose={() => setSelectedRequest(null)}>
         <TouchableWithoutFeedback onPress={() => setSelectedRequest(null)}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.32)', justifyContent: 'flex-end' }}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-              <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                <View className="bg-white rounded-t-3xl p-6 pb-10">
-                  <View className="flex-row justify-between items-center mb-6">
-                    <Text className="text-xl font-black text-[#1a1a2e]">Зээл зөвшөөрөх</Text>
-                    <TouchableOpacity onPress={() => setSelectedRequest(null)}>
-                      <X size={24} color="#AEAEB2" />
+              <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                <View style={{ backgroundColor: T.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 14, paddingHorizontal: 24, paddingBottom: 40 }}>
+                  {/* handle */}
+                  <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: T.borderMid, alignSelf: 'center', marginBottom: 20 }} />
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
+                    <Text style={{ fontSize: 20, fontWeight: '800', color: T.ink, letterSpacing: -0.4 }}>Зээл зөвшөөрөх</Text>
+                    <TouchableOpacity onPress={() => setSelectedRequest(null)} style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: T.surfaceAlt, justifyContent: 'center', alignItems: 'center' }}>
+                      <X size={16} color={T.inkMute} />
                     </TouchableOpacity>
                   </View>
 
                   {selectedRequest && (
                     <>
-                      <View className="bg-[#F8F8FC] rounded-2xl p-4 mb-4">
-                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Хүссэн дүн</Text>
-                        <Text className="text-2xl font-black text-[#1a1a2e]">₮{selectedRequest.amount.toLocaleString()}</Text>
-                        
-                        <View className="w-full h-[1px] bg-[#E5E5EA] my-3" />
-                        
-                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Зорилго</Text>
-                        <Text className="text-sm font-semibold text-[#1a1a2e]">{selectedRequest.purpose}</Text>
-
-                        <View className="w-full h-[1px] bg-[#E5E5EA] my-3" />
-                        
-                        <Text className="text-xs font-semibold text-[#8E8E93] mb-1">Хугацаа ба Төлөлт</Text>
-                        <Text className="text-sm font-semibold text-[#1a1a2e]">
-                          {selectedRequest.dueDays || 14} хоног · {selectedRequest.installments || 1} хувааж
+                      {/* Summary block */}
+                      <View style={{ backgroundColor: T.surfaceAlt, borderRadius: 18, padding: 16, marginBottom: 16, borderWidth: StyleSheet.hairlineWidth, borderColor: T.border }}>
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: T.inkMute, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 4 }}>Хүссэн дүн</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '800', color: T.ink, letterSpacing: -1, marginBottom: 14 }}>
+                          ₮{selectedRequest.amount.toLocaleString()}
                         </Text>
+                        <HRule />
+                        <View style={{ flexDirection: 'row', gap: 24, marginTop: 14 }}>
+                          <View>
+                            <Text style={{ fontSize: 11, fontWeight: '600', color: T.inkMute, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>Зорилго</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: T.ink }}>{selectedRequest.purpose}</Text>
+                          </View>
+                          <View>
+                            <Text style={{ fontSize: 11, fontWeight: '600', color: T.inkMute, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>Хугацаа</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: T.ink }}>{selectedRequest.dueDays || 14} хоног · {selectedRequest.installments || 1}x</Text>
+                          </View>
+                        </View>
                       </View>
 
-                      <View className="flex-row items-center gap-2 mb-2">
-                        <Percent size={14} color="#8E8E93" />
-                        <Text className="text-sm font-semibold text-[#8E8E93]">Сарын хүү (%)</Text>
-                      </View>
-                      <TextInput
-                        className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-6 border border-[#F2F2F7]"
+                      <InputLabel text="Сарын хүү (%)" />
+                      <Field
                         value={approveInterest}
                         onChangeText={setApproveInterest}
                         keyboardType="decimal-pad"
                         placeholder="Жишээ нь: 5 эсвэл 3.5"
-                        placeholderTextColor="#C7C7CC"
+                        style={{ marginBottom: 20 }}
                       />
 
-                      <TouchableOpacity
-                        className="bg-[#34C759] rounded-2xl py-4 items-center flex-row justify-center gap-2"
+                      <PrimaryBtn
+                        label="Батлах"
                         onPress={confirmApproveRequest}
-                        activeOpacity={0.7}
-                      >
-                        <CheckCircle size={18} color="#fff" />
-                        <Text className="text-white font-bold text-base">Батлах</Text>
-                      </TouchableOpacity>
+                        color={T.gain}
+                        icon={<CheckCircle size={17} color="#fff" />}
+                      />
                     </>
                   )}
                 </View>
@@ -163,216 +218,247 @@ export default function ParentLoans() {
         </TouchableWithoutFeedback>
       </Modal>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-        <Animated.View entering={FadeInDown.duration(500)} className="px-6 pt-4 pb-2 flex-row justify-between items-center">
+      {/* ── Main scroll ───────────────────────────────────────────────── */}
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+
+        {/* Header */}
+        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingHorizontal: 24, paddingTop: 22, paddingBottom: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <View>
-            <Text className="text-2xl font-black text-[#1a1a2e]">Зээлийн удирдлага</Text>
-            <Text className="text-sm text-[#AEAEB2] mt-0.5">Хүүхдэд зээл үүсгэх</Text>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: T.ink, letterSpacing: -0.7 }}>Зээлийн удирдлага</Text>
+            <Text style={{ fontSize: 13, color: T.inkMute, fontWeight: '500', marginTop: 3 }}>Хүүхдэд зээл үүсгэх</Text>
           </View>
           <TouchableOpacity
-            className={`w-12 h-12 rounded-2xl justify-center items-center ${showForm ? 'bg-[#FF3B30]' : 'bg-[#6C63FF]'}`}
             onPress={() => setShowForm(!showForm)}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
+            style={{
+              width: 42, height: 42, borderRadius: 21,
+              backgroundColor: showForm ? T.lossSoft : T.brand,
+              justifyContent: 'center', alignItems: 'center',
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: showForm ? T.loss : T.brand,
+              marginTop: 6,
+            }}
           >
-            {showForm ? <X size={22} color="#fff" /> : <Plus size={22} color="#fff" />}
+            {showForm
+              ? <X size={18} color={T.loss} />
+              : <Plus size={18} color="#fff" />
+            }
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Direct Loan Creation Form */}
+        {/* ── Create loan form ──────────────────────────────────────── */}
         {showForm && (
-          <Animated.View entering={FadeInDown.duration(400)} className="mx-6 bg-white rounded-3xl p-5 mb-4 shadow-sm border border-[#6C63FF]/10">
-            <Text className="text-lg font-bold text-[#1a1a2e] mb-4">Шинэ зээл</Text>
+          <Animated.View entering={FadeInDown.duration(350)} style={{ marginHorizontal: 24, marginBottom: 18 }}>
+            <View style={{ backgroundColor: T.surface, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: T.border, overflow: 'hidden' }}>
+              <View style={{ padding: 18 }}>
+                <Text style={{ fontSize: 17, fontWeight: '800', color: T.ink, letterSpacing: -0.3, marginBottom: 16 }}>Шинэ зээл</Text>
 
-            {state.children.filter(c => c.age >= 10).length === 0 ? (
-              <View className="bg-[#FF3B30]/10 p-4 rounded-2xl items-center mb-4 border border-[#FF3B30]/20">
-                <Text className="text-sm font-bold text-[#FF3B30] text-center">Зээл авах боломжтой (10-аас дээш насны) хүүхэд байхгүй байна.</Text>
-              </View>
-            ) : (
-              <>
-                <Text className="text-sm font-semibold text-[#8E8E93] mb-2">Хүүхэд</Text>
-                <View className="flex-row gap-2 mb-4">
-                  {state.children.filter(c => c.age >= 10).map(child => {
-                    const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
-                    return (
-                      <TouchableOpacity
-                        key={child.id}
-                        className={`flex-1 p-3 rounded-2xl border-2 items-center ${
-                          selectedChild === child.id ? 'border-[#6C63FF] bg-[#6C63FF]/5' : 'border-[#F2F2F7]'
-                        }`}
-                        onPress={() => setSelectedChild(child.id)}
-                      >
-                        <AvatarIcon size={24} color={selectedChild === child.id ? '#6C63FF' : '#C7C7CC'} />
-                        <Text className={`text-sm font-semibold mt-1 ${selectedChild === child.id ? 'text-[#6C63FF]' : 'text-[#AEAEB2]'}`}>
-                          {child.name}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Wallet size={14} color="#8E8E93" />
-                  <Text className="text-sm font-semibold text-[#8E8E93]">Зээлийн дүн (₮)</Text>
-                </View>
-                <TextInput
-                  className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-3 border border-[#F2F2F7]"
-                  value={amount}
-                  onChangeText={setAmount}
-                  keyboardType="number-pad"
-                  placeholder="5000"
-                  placeholderTextColor="#C7C7CC"
-                />
-
-                {isTeenSelected ? (
-                  <View className="bg-[#34C759]/10 p-4 rounded-2xl items-center mb-3 border border-[#34C759]/20">
-                    <Text className="text-sm font-bold text-[#34C759]">Teen насны хүүхдэд зээлийн хүү тооцохгүй (0%).</Text>
+                {state.children.filter(c => c.age >= 10).length === 0 ? (
+                  <View style={{ backgroundColor: T.lossSoft, borderRadius: 14, padding: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: T.loss + '30' }}>
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: T.loss, textAlign: 'center' }}>
+                      Зээл авах боломжтой (10-аас дээш насны) хүүхэд байхгүй байна.
+                    </Text>
                   </View>
                 ) : (
                   <>
-                    <View className="flex-row items-center gap-2 mb-2">
-                      <Percent size={14} color="#8E8E93" />
-                      <Text className="text-sm font-semibold text-[#8E8E93]">Хүүгийн хувь</Text>
+                    {/* Child picker */}
+                    <InputLabel text="Хүүхэд" />
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                      {state.children.filter(c => c.age >= 10).map(child => {
+                        const AvatarIcon = AVATAR_ICONS[child.avatar] || Rocket;
+                        const active = selectedChild === child.id;
+                        return (
+                          <TouchableOpacity
+                            key={child.id}
+                            onPress={() => setSelectedChild(child.id)}
+                            style={{
+                              flex: 1, paddingVertical: 12, borderRadius: 16, alignItems: 'center',
+                              backgroundColor: active ? T.brandSoft : T.surfaceAlt,
+                              borderWidth: active ? 1.5 : StyleSheet.hairlineWidth,
+                              borderColor: active ? T.brand : T.border,
+                            }}
+                          >
+                            <AvatarIcon size={22} color={active ? T.brand : T.inkMute} />
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: active ? T.brand : T.inkMute, marginTop: 5 }}>
+                              {child.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
-                    <TextInput
-                      className="bg-[#F8F8FC] rounded-2xl p-4 text-base text-[#1a1a2e] mb-3 border border-[#F2F2F7]"
-                      value={interestRate}
-                      onChangeText={setInterestRate}
-                      keyboardType="decimal-pad"
-                      placeholder="Жишээ нь: 5"
-                      placeholderTextColor="#C7C7CC"
-                    />
+
+                    <InputLabel text="Зээлийн дүн (₮)" />
+                    <Field value={amount} onChangeText={setAmount} keyboardType="number-pad" placeholder="5,000" />
+
+                    {isTeenSelected ? (
+                      <View style={{ backgroundColor: T.gainSoft, borderRadius: 14, padding: 12, marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: T.gain }} />
+                        <Text style={{ fontSize: 13, fontWeight: '600', color: T.gain }}>Teen насны хүүхдэд зээлийн хүү тооцохгүй (0%)</Text>
+                      </View>
+                    ) : (
+                      <>
+                        <InputLabel text="Хүүгийн хувь (%)" />
+                        <Field
+                          value={interestRate}
+                          onChangeText={setInterestRate}
+                          keyboardType="decimal-pad"
+                          placeholder="10"
+                        />
+                      </>
+                    )}
+
+                    <InputLabel text="Хугацаа" />
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                      {['3', '7', '14', '30'].map(days => (
+                        <TouchableOpacity
+                          key={days} onPress={() => setDueDays(days)}
+                          style={{
+                            flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
+                            backgroundColor: dueDays === days ? T.brand : T.surfaceAlt,
+                            borderWidth: StyleSheet.hairlineWidth,
+                            borderColor: dueDays === days ? T.brand : T.border,
+                          }}
+                        >
+                          <Text style={{ fontSize: 13, fontWeight: '700', color: dueDays === days ? '#fff' : T.inkMid }}>
+                            {days}д
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {amountNum > 0 && (
+                      <View style={{ backgroundColor: T.brandSoft, borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: StyleSheet.hairlineWidth, borderColor: T.brand + '20', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <Calculator size={16} color={T.brand} />
+                        <View>
+                          <Text style={{ fontSize: 11, fontWeight: '600', color: T.brand, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>Тооцоолол</Text>
+                          <Text style={{ fontSize: 13, color: T.inkMid }}>
+                            ₮{amountNum.toLocaleString()} + ₮{interest.toLocaleString()} = {' '}
+                            <Text style={{ fontWeight: '800', color: T.ink }}>₮{total.toLocaleString()}</Text>
+                          </Text>
+                        </View>
+                      </View>
+                    )}
                   </>
                 )}
+              </View>
 
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Calendar size={14} color="#8E8E93" />
-                  <Text className="text-sm font-semibold text-[#8E8E93]">Хугацаа</Text>
-                </View>
-                <View className="flex-row gap-2 mb-4">
-                  {['3', '7', '14', '30'].map(days => (
-                    <TouchableOpacity
-                      key={days}
-                      className={`flex-1 py-3 rounded-2xl items-center ${dueDays === days ? 'bg-[#4ECDC4]' : 'bg-[#F8F8FC]'}`}
-                      onPress={() => setDueDays(days)}
-                    >
-                      <Text className={`font-bold ${dueDays === days ? 'text-white' : 'text-[#8E8E93]'}`}>{days}д</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {amount ? (
-                  <View className="bg-[#6C63FF]/5 rounded-2xl p-4 mb-4 flex-row items-center gap-3 border border-[#6C63FF]/10">
-                    <Calculator size={18} color="#6C63FF" />
-                    <View>
-                      <Text className="text-xs text-[#6C63FF] font-semibold">Тооцоолол</Text>
-                      <Text className="text-sm text-[#1a1a2e]">
-                        ₮{parseInt(amount || '0').toLocaleString()} + ₮{Math.round(parseInt(amount || '0') * (currentInterestRate / 100) * (parseInt(dueDays) / 30)).toLocaleString()} = <Text className="font-bold">₮{Math.round(parseInt(amount || '0') * (1 + (currentInterestRate / 100) * (parseInt(dueDays) / 30))).toLocaleString()}</Text>
-                      </Text>
+              {state.children.filter(c => c.age >= 10).length > 0 && (
+                <>
+                  <HRule />
+                  <TouchableOpacity
+                    onPress={handleCreateLoan} activeOpacity={0.8}
+                    style={{ padding: 18 }}
+                  >
+                    <View style={{ backgroundColor: T.brand, borderRadius: 16, paddingVertical: 15, alignItems: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>Зээл үүсгэх</Text>
                     </View>
-                  </View>
-                ) : null}
-
-                <TouchableOpacity className="bg-[#6C63FF] rounded-2xl py-4 items-center" onPress={handleCreateLoan} activeOpacity={0.7}>
-                  <Text className="text-white text-base font-bold">Зээл үүсгэх</Text>
-                </TouchableOpacity>
-              </>
-            )}
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
           </Animated.View>
         )}
 
-        {/* Pending Loan Requests from Children */}
+        {/* ── Pending requests ──────────────────────────────────────── */}
         {pendingRequests.length > 0 && (
-          <Animated.View entering={FadeInDown.duration(500).delay(100)} className="px-6 mb-4">
-            <View className="flex-row items-center gap-2 mb-3">
-              <Send size={16} color="#FF9500" />
-              <Text className="text-base font-bold text-[#FF9500]">Хүүхдийн зээл хүсэлтүүд</Text>
-              <View className="bg-[#FF9500] rounded-full w-6 h-6 items-center justify-center ml-1">
-                <Text className="text-xs font-bold text-white">{pendingRequests.length}</Text>
+          <Animated.View entering={FadeInDown.duration(400).delay(100)} style={{ paddingHorizontal: 24, marginBottom: 18 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Text style={{ fontSize: 17, fontWeight: '800', color: T.ink, letterSpacing: -0.3, flex: 1 }}>Хүсэлтүүд</Text>
+              <View style={{ backgroundColor: T.brand, borderRadius: 10, minWidth: 22, height: 22, paddingHorizontal: 6, justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>{pendingRequests.length}</Text>
               </View>
             </View>
 
-            {pendingRequests.map(req => {
-              const reqChildObj = state.children.find(c => c.id === req.childId);
-              const isReqTeen = reqChildObj && reqChildObj.age >= 10 && reqChildObj.age <= 14;
-              const reqInterest = isReqTeen ? 0 : 10;
-              const AvatarIcon = AVATAR_ICONS[req.childAvatar] || Rocket;
-              return (
-                <View key={req.id} className="bg-white rounded-3xl p-5 mb-3 shadow-sm border border-[#FF9500]/15">
-                  {/* Child info & amount */}
-                  <View className="flex-row items-center justify-between mb-3">
-                    <View className="flex-row items-center gap-3">
-                      <View className="w-10 h-10 rounded-2xl bg-[#6C63FF]/10 justify-center items-center">
-                        <AvatarIcon size={20} color="#6C63FF" />
+            <View style={{ gap: 10 }}>
+              {pendingRequests.map(req => {
+                const reqChildObj = state.children.find(c => c.id === req.childId);
+                const isReqTeen = reqChildObj && reqChildObj.age >= 10 && reqChildObj.age <= 14;
+                const reqInterest = isReqTeen ? 0 : 10;
+                const AvatarIcon = AVATAR_ICONS[req.childAvatar] || Rocket;
+
+                return (
+                  <View key={req.id} style={{ backgroundColor: T.surface, borderRadius: 22, borderWidth: StyleSheet.hairlineWidth, borderColor: T.border, overflow: 'hidden' }}>
+                    {/* Top row */}
+                    <View style={{ padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: T.brandSoft, justifyContent: 'center', alignItems: 'center' }}>
+                        <AvatarIcon size={20} color={T.brand} />
                       </View>
-                      <View>
-                        <Text className="text-sm font-semibold text-[#AEAEB2]">{req.childName}</Text>
-                        <Text className="text-xl font-black text-[#1a1a2e]">₮{req.amount.toLocaleString()}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 12, color: T.inkMute, fontWeight: '500' }}>{req.childName}</Text>
+                        <Text style={{ fontSize: 22, fontWeight: '800', color: T.ink, letterSpacing: -0.7, marginTop: 1 }}>
+                          ₮{req.amount.toLocaleString()}
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: T.surfaceAlt, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: T.border }}>
+                        <Clock size={11} color={T.inkMute} />
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: T.inkMute }}>Хүлээгдэж буй</Text>
                       </View>
                     </View>
-                    <View className="bg-[#FF9500]/10 px-3 py-1.5 rounded-full flex-row items-center gap-1">
-                      <Clock size={12} color="#FF9500" />
-                      <Text className="text-xs font-bold text-[#FF9500]">Хүлээгдэж буй</Text>
+
+                    <HRule />
+
+                    {/* Purpose */}
+                    <View style={{ padding: 14, flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
+                      <MessageSquare size={14} color={T.brand} style={{ marginTop: 2 }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '600', color: T.brand, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>Зорилго</Text>
+                        <Text style={{ fontSize: 13, color: T.inkMid, lineHeight: 18 }}>{req.purpose}</Text>
+                      </View>
+                    </View>
+
+                    <View style={{ paddingHorizontal: 14, paddingBottom: 4 }}>
+                      <Text style={{ fontSize: 11, color: T.inkMute }}>
+                        Хүсэлт: {new Date(req.createdAt).toLocaleDateString('mn-MN')}
+                      </Text>
+                    </View>
+
+                    <HRule />
+
+                    {/* Action buttons */}
+                    <View style={{ flexDirection: 'row', padding: 12, gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => openApproveModal(req, reqInterest)} activeOpacity={0.8}
+                        style={{ flex: 1, backgroundColor: T.gainSoft, borderRadius: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: T.gain + '30' }}
+                      >
+                        <CheckCircle size={16} color={T.gain} />
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: T.gain }}>Зөвшөөрөх</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleRejectRequest(req.childId, req.id)} activeOpacity={0.8}
+                        style={{ flex: 1, backgroundColor: T.lossSoft, borderRadius: 14, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: StyleSheet.hairlineWidth, borderColor: T.loss + '30' }}
+                      >
+                        <XCircle size={16} color={T.loss} />
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: T.loss }}>Татгалзах</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-
-                  {/* Purpose */}
-                  <View className="bg-[#F8F8FC] rounded-2xl p-3.5 mb-4 flex-row items-start gap-2">
-                    <MessageSquare size={16} color="#6C63FF" style={{ marginTop: 1 }} />
-                    <View className="flex-1">
-                      <Text className="text-xs font-semibold text-[#6C63FF] mb-1">Зорилго</Text>
-                      <Text className="text-sm text-[#1a1a2e]">{req.purpose}</Text>
-                    </View>
-                  </View>
-
-                  {/* Date */}
-                  <Text className="text-xs text-[#AEAEB2] mb-3">
-                    Хүсэлт: {new Date(req.createdAt).toLocaleDateString('mn-MN')}
-                  </Text>
-
-                  {/* Action buttons */}
-                  <View className="flex-row gap-2">
-                    <TouchableOpacity
-                      className="flex-1 bg-[#34C759] rounded-2xl py-3.5 items-center flex-row justify-center gap-2"
-                      onPress={() => openApproveModal(req, reqInterest)}
-                      activeOpacity={0.7}
-                    >
-                      <CheckCircle size={18} color="#fff" />
-                      <Text className="text-white font-bold text-sm">Зөвшөөрөх</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      className="flex-1 bg-[#FF3B30] rounded-2xl py-3.5 items-center flex-row justify-center gap-2"
-                      onPress={() => handleRejectRequest(req.childId, req.id)}
-                      activeOpacity={0.7}
-                    >
-                      <XCircle size={18} color="#fff" />
-                      <Text className="text-white font-bold text-sm">Татгалзах</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              );
-            })}
+                );
+              })}
+            </View>
           </Animated.View>
         )}
 
-        {/* All Loans */}
-        <View className="px-6 mt-2">
+        {/* ── All loans ─────────────────────────────────────────────── */}
+        <View style={{ paddingHorizontal: 24 }}>
           {allLoans.length === 0 && pendingRequests.length === 0 ? (
             <EmptyState title="Зээл байхгүй" message="Хүүхдэд зээл үүсгэхийн тулд + товч дарна уу." />
           ) : allLoans.length > 0 ? (
             <>
-              <Text className="text-base font-bold text-[#1a1a2e] mb-3">Бүх зээлүүд</Text>
-              {allLoans.map(loan => {
-                const AvatarIcon = AVATAR_ICONS[loan.childAvatar] || Rocket;
-                return (
-                  <View key={loan.id}>
-                    <View className="flex-row items-center gap-1.5 mb-1 ml-1">
-                      <AvatarIcon size={12} color="#AEAEB2" />
-                      <Text className="text-xs text-[#AEAEB2]">{loan.childName}</Text>
+              <Text style={{ fontSize: 17, fontWeight: '800', color: T.ink, letterSpacing: -0.3, marginBottom: 12 }}>Бүх зээлүүд</Text>
+              <View style={{ gap: 8 }}>
+                {allLoans.map(loan => {
+                  const AvatarIcon = AVATAR_ICONS[loan.childAvatar] || Rocket;
+                  return (
+                    <View key={loan.id}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, marginLeft: 4 }}>
+                        <AvatarIcon size={11} color={T.inkMute} />
+                        <Text style={{ fontSize: 11, color: T.inkMute, fontWeight: '500' }}>{loan.childName}</Text>
+                      </View>
+                      <LoanCard loan={loan} />
                     </View>
-                    <LoanCard loan={loan} />
-                  </View>
-                );
-              })}
+                  );
+                })}
+              </View>
             </>
           ) : null}
         </View>

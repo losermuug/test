@@ -15,7 +15,7 @@ export interface AgeGroupConfig {
 export const AGE_GROUP_CONFIG: Record<AgeGroup, AgeGroupConfig> = {
   junior: {
     label: 'Бяцхан санхүүч',
-    description: '6-9 насны хүүхдүүдэд зориулсан',
+    description: '5-10 насны хүүхдүүдэд зориулсан',
     colorPrimary: '#FF6B6B',
     colorSecondary: '#FFD93D',
     bgGradient: '#FFF5F5',
@@ -24,7 +24,7 @@ export const AGE_GROUP_CONFIG: Record<AgeGroup, AgeGroupConfig> = {
   },
   teen: {
     label: 'Залуу санхүүч',
-    description: '10-14 насны хүүхдүүдэд зориулсан',
+    description: '11-14 насны хүүхдүүдэд зориулсан',
     colorPrimary: '#6C63FF',
     colorSecondary: '#4ECDC4',
     bgGradient: '#F8F8FC',
@@ -33,7 +33,7 @@ export const AGE_GROUP_CONFIG: Record<AgeGroup, AgeGroupConfig> = {
   },
   senior: {
     label: 'Ахлах санхүүч',
-    description: '15-18 насны хүүхдүүдэд зориулсан',
+    description: '15-19 насны хүүхдүүдэд зориулсан',
     colorPrimary: '#1a1a2e',
     colorSecondary: '#6C63FF',
     bgGradient: '#F0F0F8',
